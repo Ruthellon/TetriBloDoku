@@ -8,32 +8,34 @@ public class StartScreen : MonoBehaviour
     public GameObject InputName;
     public void StartClassic()
     {
-        if (!string.IsNullOrEmpty(RandomGame.Username) || InputName.GetComponent<TMPro.TMP_InputField>().text != RandomGame.Username)
+        if (!string.IsNullOrEmpty(TBDGame.Username) || InputName.GetComponent<TMPro.TMP_InputField>().text != TBDGame.Username)
         {
-            RandomGame.Username = InputName.GetComponent<TMPro.TMP_InputField>().text;
-            PlayerPrefs.SetString("Username", RandomGame.Username);
+            TBDGame.Username = InputName.GetComponent<TMPro.TMP_InputField>().text;
+            TBDGame.GameMode = 2;
+            PlayerPrefs.SetString("Username", TBDGame.Username);
         }
 
-        SceneManager.LoadScene("Classic");
+        SceneManager.LoadScene("TBDGame");
     }
 
     public void StartRandom()
     {
-        if (!string.IsNullOrEmpty(RandomGame.Username) || InputName.GetComponent<TMPro.TMP_InputField>().text != RandomGame.Username)
+        if (!string.IsNullOrEmpty(TBDGame.Username) || InputName.GetComponent<TMPro.TMP_InputField>().text != TBDGame.Username)
         {
-            RandomGame.Username = InputName.GetComponent<TMPro.TMP_InputField>().text;
-            PlayerPrefs.SetString("Username", RandomGame.Username);
+            TBDGame.Username = InputName.GetComponent<TMPro.TMP_InputField>().text;
+            TBDGame.GameMode = 1;
+            PlayerPrefs.SetString("Username", TBDGame.Username);
         }
 
-        SceneManager.LoadScene("Random");
+        SceneManager.LoadScene("TBDGame");
     }
 
     public void HighScores()
     {
-        if (!string.IsNullOrEmpty(RandomGame.Username) || InputName.GetComponent<TMPro.TMP_InputField>().text != RandomGame.Username)
+        if (!string.IsNullOrEmpty(TBDGame.Username) || InputName.GetComponent<TMPro.TMP_InputField>().text != TBDGame.Username)
         {
-            RandomGame.Username = InputName.GetComponent<TMPro.TMP_InputField>().text;
-            PlayerPrefs.SetString("Username", RandomGame.Username);
+            TBDGame.Username = InputName.GetComponent<TMPro.TMP_InputField>().text;
+            PlayerPrefs.SetString("Username", TBDGame.Username);
         }
 
         SceneManager.LoadScene("HighScores");
@@ -45,17 +47,17 @@ public class StartScreen : MonoBehaviour
         if (PlayerPrefs.HasKey("Username"))
         {
             InputName.GetComponent<TMPro.TMP_InputField>().text = PlayerPrefs.GetString("Username");
-            RandomGame.Username = PlayerPrefs.GetString("Username");
+            TBDGame.Username = PlayerPrefs.GetString("Username");
         }
 
         if (PlayerPrefs.HasKey("UserID"))
         {
-            RandomGame.UserID = PlayerPrefs.GetString("UserID");
+            TBDGame.UserID = PlayerPrefs.GetString("UserID");
         }
         else
         {
-            RandomGame.UserID = System.Guid.NewGuid().ToString();
-            PlayerPrefs.SetString("UserID", RandomGame.UserID);
+            TBDGame.UserID = System.Guid.NewGuid().ToString();
+            PlayerPrefs.SetString("UserID", TBDGame.UserID);
         }
     }
 

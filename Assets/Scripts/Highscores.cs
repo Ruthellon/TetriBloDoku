@@ -17,11 +17,20 @@ public class Highscores : MonoBehaviour
     TMPro.TextMeshProUGUI scores;
 
     private bool justMe = true;
-    private int gameMode = 1;
+    private int gameMode = TBDGame.GameMode;
 
     public void StartScreen()
     {
         SceneManager.LoadScene("StartScreen");
+
+        if (gameMode == 2)
+        {
+            GameModeButton.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Classic";
+        }
+        else
+        {
+            GameModeButton.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Random";
+        }
     }
 
     public void ChangeGameMode()
@@ -51,7 +60,7 @@ public class Highscores : MonoBehaviour
     public void GetJustMe()
     {
         justMe = true;
-        StartCoroutine(GetRequest("http://api.angryelfgames.com/angryelf/gethighscores/" + RandomGame.UserID));
+        StartCoroutine(GetRequest("http://api.angryelfgames.com/angryelf/gethighscores/" + TBDGame.UserID));
     }
 
     // Start is called before the first frame update
@@ -63,7 +72,7 @@ public class Highscores : MonoBehaviour
         names.text = string.Empty;
         scores.text = string.Empty;
 
-        StartCoroutine(GetRequest("http://api.angryelfgames.com/angryelf/gethighscores/" + RandomGame.UserID));
+        StartCoroutine(GetRequest("http://api.angryelfgames.com/angryelf/gethighscores/" + TBDGame.UserID));
     }
 
     IEnumerator GetRequest(string uri)

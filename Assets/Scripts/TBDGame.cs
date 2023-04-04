@@ -1,3 +1,4 @@
+using Assets.Scripts;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,10 +7,11 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 
-public class RandomGame : MonoBehaviour
+public class TBDGame : MonoBehaviour
 {
     public static string Username;
     public static string UserID;
+    public static int GameMode = 2;
 
     public GameObject SudokuGrid;
     public GameObject Highlight;
@@ -42,12 +44,12 @@ public class RandomGame : MonoBehaviour
     {
         StartCoroutine(PostRequest("http://api.angryelfgames.com/AngryElf/InputHighScore", Score));
 
-        if (PlayerPrefs.HasKey("BoardState"))
+        if (PlayerPrefs.HasKey("BoardState" + GameMode.ToString()))
         {
-            PlayerPrefs.SetString("BoardState", "");
+            PlayerPrefs.SetString("BoardState" + GameMode.ToString(), "");
         }
 
-        SceneManager.LoadScene("RandomGame");
+        SceneManager.LoadScene("TBDGame");
     }
 
     public void HighScores()
@@ -214,26 +216,36 @@ public class RandomGame : MonoBehaviour
 
                         //CurrentTiles[nearestX, nearestY] = draggedObject.Parent.transform.GetChild(0).gameObject;
 
-                        for (int i = 0; i < draggedObject.ChosenChildren.Count; i++)
+                        if (GameMode == 1)
                         {
-                            if (draggedObject.ChosenChildren[i] == 0)
-                                CurrentTiles[nearestX - 1, nearestY - 1] = draggedObject.Parent.transform.GetChild(i).gameObject;
-                            else if (draggedObject.ChosenChildren[i] == 1)
-                                CurrentTiles[nearestX, nearestY - 1] = draggedObject.Parent.transform.GetChild(i).gameObject;
-                            else if (draggedObject.ChosenChildren[i] == 2)
-                                CurrentTiles[nearestX + 1, nearestY - 1] = draggedObject.Parent.transform.GetChild(i).gameObject;
-                            else if (draggedObject.ChosenChildren[i] == 3)
-                                CurrentTiles[nearestX - 1, nearestY] = draggedObject.Parent.transform.GetChild(i).gameObject;
-                            else if (draggedObject.ChosenChildren[i] == 4)
-                                CurrentTiles[nearestX, nearestY] = draggedObject.Parent.transform.GetChild(i).gameObject;
-                            else if (draggedObject.ChosenChildren[i] == 5)
-                                CurrentTiles[nearestX + 1, nearestY] = draggedObject.Parent.transform.GetChild(i).gameObject;
-                            else if (draggedObject.ChosenChildren[i] == 6)
-                                CurrentTiles[nearestX - 1, nearestY + 1] = draggedObject.Parent.transform.GetChild(i).gameObject;
-                            else if (draggedObject.ChosenChildren[i] == 7)
-                                CurrentTiles[nearestX, nearestY + 1] = draggedObject.Parent.transform.GetChild(i).gameObject;
-                            else if (draggedObject.ChosenChildren[i] == 8)
-                                CurrentTiles[nearestX + 1, nearestY + 1] = draggedObject.Parent.transform.GetChild(i).gameObject;
+                            for (int i = 0; i < draggedObject.ChosenChildren.Count; i++)
+                            {
+                                if (draggedObject.ChosenChildren[i] == 0)
+                                    CurrentTiles[nearestX - 1, nearestY - 1] = draggedObject.Parent.transform.GetChild(i).gameObject;
+                                else if (draggedObject.ChosenChildren[i] == 1)
+                                    CurrentTiles[nearestX, nearestY - 1] = draggedObject.Parent.transform.GetChild(i).gameObject;
+                                else if (draggedObject.ChosenChildren[i] == 2)
+                                    CurrentTiles[nearestX + 1, nearestY - 1] = draggedObject.Parent.transform.GetChild(i).gameObject;
+                                else if (draggedObject.ChosenChildren[i] == 3)
+                                    CurrentTiles[nearestX - 1, nearestY] = draggedObject.Parent.transform.GetChild(i).gameObject;
+                                else if (draggedObject.ChosenChildren[i] == 4)
+                                    CurrentTiles[nearestX, nearestY] = draggedObject.Parent.transform.GetChild(i).gameObject;
+                                else if (draggedObject.ChosenChildren[i] == 5)
+                                    CurrentTiles[nearestX + 1, nearestY] = draggedObject.Parent.transform.GetChild(i).gameObject;
+                                else if (draggedObject.ChosenChildren[i] == 6)
+                                    CurrentTiles[nearestX - 1, nearestY + 1] = draggedObject.Parent.transform.GetChild(i).gameObject;
+                                else if (draggedObject.ChosenChildren[i] == 7)
+                                    CurrentTiles[nearestX, nearestY + 1] = draggedObject.Parent.transform.GetChild(i).gameObject;
+                                else if (draggedObject.ChosenChildren[i] == 8)
+                                    CurrentTiles[nearestX + 1, nearestY + 1] = draggedObject.Parent.transform.GetChild(i).gameObject;
+                            }
+                        }
+                        else if (GameMode == 2)
+                        {
+                            for (int i = 0; i < Shapes.ShapesList[draggedObject.ChosenShape].Count; i++)
+                            {
+                                CurrentTiles[nearestX + Shapes.ShapesList[draggedObject.ChosenShape][i].Item1, nearestY - Shapes.ShapesList[draggedObject.ChosenShape][i].Item2] = draggedObject.Parent.transform.GetChild(i).gameObject;
+                            }
                         }
 
                         draggedObject.Parent.transform.DetachChildren();
@@ -281,36 +293,53 @@ public class RandomGame : MonoBehaviour
 
     ParentTile InstantiateShape(Vector3 position)
     {
-        int chanceOf1 = Random.Range(0, 10);
-        int tileCount = 0;
-        
-        if (chanceOf1 == 0)
-            tileCount = Random.Range(1, 6);
-        else
-            tileCount = Random.Range(2, 6);
-
-        ParentTile parent = new ParentTile();
-        parent.Parent = Instantiate(new GameObject(), new Vector3(position.x, position.y), Quaternion.identity);
-        parent.TileCount = tileCount;
-
-        Instantiate(Tile, new Vector3(position.x, position.y), Quaternion.identity, parent.Parent.transform);
-
-        if (tileCount == 1)
+        if (GameMode == 1)
         {
-            parent.ChosenChildren = new List<int>();
-            parent.ChosenChildren.Add(4);
-            return parent;
-        }
-        else
-        {
-            List<int> chosenChildren = new List<int>();
-            chosenChildren.Add(4);
-            for (int i = 1; i < tileCount; i++)
+            int tileCount = Random.Range(1, 101);
+
+            if (tileCount <= 10)
+                tileCount = 1;
+            else if (tileCount <= 30)
+                tileCount = 2;
+            else if (tileCount <= 55)
+                tileCount = 3;
+            else if (tileCount <= 75)
+                tileCount = 4;
+            else if (tileCount <= 85)
+                tileCount = 5;
+            else if (tileCount <= 93)
+                tileCount = 6;
+            else if (tileCount <= 97)
+                tileCount = 7;
+            else if (tileCount <= 99)
+                tileCount = 8;
+            else if (tileCount <= 100)
+                tileCount = 9;
+
+
+            ParentTile parent = new ParentTile();
+            parent.Parent = Instantiate(new GameObject(), new Vector3(position.x, position.y), Quaternion.identity);
+            parent.TileCount = tileCount;
+
+            if (tileCount == 1)
             {
-                int child = Random.Range(0, 9);
-
-                if (!chosenChildren.Contains(child))
+                Instantiate(Tile, new Vector3(position.x, position.y), Quaternion.identity, parent.Parent.transform);
+                parent.ChosenChildren = new List<int>();
+                parent.ChosenChildren.Add(4);
+                return parent;
+            }
+            else
+            {
+                List<int> chosenChildren = new List<int>();
+                for (int i = 1; i < tileCount; i++)
                 {
+                    int child = Random.Range(0, 9);
+
+                    while (chosenChildren.Contains(child))
+                    {
+                        child = Random.Range(0, 9);
+                    }
+
                     if (child == 0)
                         Instantiate(Tile, new Vector3(position.x - tileWidth, position.y + tileHeight), Quaternion.identity, parent.Parent.transform);
                     else if (child == 1)
@@ -319,6 +348,8 @@ public class RandomGame : MonoBehaviour
                         Instantiate(Tile, new Vector3(position.x + tileWidth, position.y + tileHeight), Quaternion.identity, parent.Parent.transform);
                     else if (child == 3)
                         Instantiate(Tile, new Vector3(position.x - tileWidth, position.y), Quaternion.identity, parent.Parent.transform);
+                    else if (child == 4)
+                        Instantiate(Tile, new Vector3(position.x, position.y), Quaternion.identity, parent.Parent.transform);
                     else if (child == 5)
                         Instantiate(Tile, new Vector3(position.x + tileWidth, position.y), Quaternion.identity, parent.Parent.transform);
                     else if (child == 6)
@@ -330,9 +361,55 @@ public class RandomGame : MonoBehaviour
 
                     chosenChildren.Add(child);
                 }
-            }
 
-            parent.ChosenChildren = chosenChildren;
+                parent.ChosenChildren = chosenChildren;
+                return parent;
+            }
+        }
+        else if (GameMode == 2)
+        {
+            int shape = Random.Range(0, Shapes.ShapesList.Count);
+
+            ParentTile parent = new ParentTile();
+            parent.Parent = Instantiate(new GameObject(), new Vector3(position.x, position.y), Quaternion.identity);
+            parent.TileCount = Shapes.ShapesList.Count;
+            parent.ChosenShape = shape;
+
+
+            if (parent.TileCount == 1)
+            {
+                Instantiate(Tile, new Vector3(position.x, position.y), Quaternion.identity, parent.Parent.transform);
+                return parent;
+            }
+            else
+            {
+                List<int> chosenChildren = new List<int>();
+
+                for (int i = 0; i < Shapes.ShapesList[shape].Count; i++)
+                {
+                    float positionX = 0;
+                    float positionY = 0;
+
+                    if (Shapes.ShapesList[shape][i].Item1 > 0)
+                        positionX = tileWidth;
+                    else if (Shapes.ShapesList[shape][i].Item1 < 0)
+                        positionX = -tileWidth;
+
+                    if (Shapes.ShapesList[shape][i].Item2 > 0)
+                        positionY = tileHeight;
+                    else if (Shapes.ShapesList[shape][i].Item2 < 0)
+                        positionY = -tileHeight;
+
+                    Instantiate(Tile, new Vector3(position.x + positionX, position.y + positionY), Quaternion.identity, parent.Parent.transform);
+                }
+                return parent;
+            }
+        }
+        else
+        {
+            ParentTile parent = new ParentTile();
+            parent.Parent = Instantiate(new GameObject(), new Vector3(position.x, position.y), Quaternion.identity);
+            parent.TileCount = 0;
             return parent;
         }
     }
@@ -439,10 +516,10 @@ public class RandomGame : MonoBehaviour
 
     void GetBoardState()
     {
-        if (PlayerPrefs.HasKey("BoardState") && !string.IsNullOrEmpty(PlayerPrefs.GetString("BoardState")))
+        if (PlayerPrefs.HasKey("BoardState" + GameMode.ToString()) && !string.IsNullOrEmpty(PlayerPrefs.GetString("BoardState" + GameMode.ToString())))
         {
-            Score = PlayerPrefs.GetInt("Score", 0);
-            SaveObject save = JsonUtility.FromJson<SaveObject>(PlayerPrefs.GetString("BoardState"));
+            Score = PlayerPrefs.GetInt("Score" + GameMode.ToString(), 0);
+            SaveObject save = JsonUtility.FromJson<SaveObject>(PlayerPrefs.GetString("BoardState" + GameMode.ToString()));
 
             for (int i = 0; i < save.currentTiles.Length; i++)
             {
@@ -474,8 +551,8 @@ public class RandomGame : MonoBehaviour
 
         string json = JsonUtility.ToJson(save);
 
-        PlayerPrefs.SetString("BoardState", json);
-        PlayerPrefs.SetInt("Score", Score);
+        PlayerPrefs.SetString("BoardState" + GameMode.ToString(), json);
+        PlayerPrefs.SetInt("Score" + GameMode.ToString(), Score);
     }
 
     IEnumerator PostRequest(string uri, int score)
@@ -483,7 +560,7 @@ public class RandomGame : MonoBehaviour
         PostData postData = new PostData();
         postData.Username = Username;
         postData.Score = score;
-        postData.GameMode = 1;
+        postData.GameMode = GameMode;
         postData.UserID = UserID;
         postData.Secret = "06ec43b7-923f-4deb-b8b0-6f0c1b85cee7";
 
@@ -513,6 +590,7 @@ public class RandomGame : MonoBehaviour
     {
         public GameObject Parent { get; set; }
         public int TileCount { get; set; }
+        public int ChosenShape { get; set; }
         public List<int> ChosenChildren { get; set; }
     }
 
