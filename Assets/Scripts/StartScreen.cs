@@ -1,3 +1,4 @@
+using Assets.Scripts;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -11,7 +12,7 @@ public class StartScreen : MonoBehaviour
         if (!string.IsNullOrEmpty(TBDGame.Username) || InputName.GetComponent<TMPro.TMP_InputField>().text != TBDGame.Username)
         {
             TBDGame.Username = InputName.GetComponent<TMPro.TMP_InputField>().text;
-            TBDGame.GameMode = 2;
+            TBDGame.GameMode = GameModes.Classic;
             PlayerPrefs.SetString("Username", TBDGame.Username);
         }
 
@@ -23,7 +24,7 @@ public class StartScreen : MonoBehaviour
         if (!string.IsNullOrEmpty(TBDGame.Username) || InputName.GetComponent<TMPro.TMP_InputField>().text != TBDGame.Username)
         {
             TBDGame.Username = InputName.GetComponent<TMPro.TMP_InputField>().text;
-            TBDGame.GameMode = 1;
+            TBDGame.GameMode = GameModes.Random;
             PlayerPrefs.SetString("Username", TBDGame.Username);
         }
 

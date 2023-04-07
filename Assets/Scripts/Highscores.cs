@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using System.Linq;
 using UnityEngine.SceneManagement;
+using Assets.Scripts;
 
 public class Highscores : MonoBehaviour
 {
@@ -17,13 +18,13 @@ public class Highscores : MonoBehaviour
     TMPro.TextMeshProUGUI scores;
 
     private bool justMe = true;
-    private int gameMode = TBDGame.GameMode;
+    private GameModes gameMode = TBDGame.GameMode;
 
     public void StartScreen()
     {
         SceneManager.LoadScene("StartScreen");
 
-        if (gameMode == 2)
+        if (gameMode == GameModes.Classic)
         {
             GameModeButton.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Classic";
         }
@@ -35,14 +36,14 @@ public class Highscores : MonoBehaviour
 
     public void ChangeGameMode()
     {
-        if (gameMode == 1)
+        if (gameMode == GameModes.Random)
         {
-            gameMode = 2;
+            gameMode = GameModes.Classic;
             GameModeButton.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Classic";
         }
         else
         {
-            gameMode = 1;
+            gameMode = GameModes.Random;
             GameModeButton.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Random";
         }
         if (justMe)
@@ -88,10 +89,10 @@ public class Highscores : MonoBehaviour
                 
                 if (response != null)
                 {
-                    List<string> responseNames = response.highscores.Where(y => y.gameMode == gameMode).Select(x => x.username).ToList();
+                    List<string> responseNames = response.highscores.Where(y => y.gameMode == (int)gameMode).Select(x => x.username).ToList();
                     names.text = String.Join(Environment.NewLine, responseNames);
 
-                    List<int> responseScores = response.highscores.Where(y => y.gameMode == gameMode).Select(x => x.score).ToList();
+                    List<int> responseScores = response.highscores.Where(y => y.gameMode == (int)gameMode).Select(x => x.score).ToList();
                     scores.text = String.Join(Environment.NewLine, responseScores);
                 }
             }
