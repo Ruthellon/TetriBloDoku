@@ -1,4 +1,5 @@
 using Assets.Scripts;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,6 +48,9 @@ public class TBDGame : MonoBehaviour
         if (PlayerPrefs.HasKey("BoardState" + GameMode.ToString()))
         {
             PlayerPrefs.SetString("BoardState" + GameMode.ToString(), "");
+            PlayerPrefs.DeleteKey("Shape1" + GameMode.ToString());
+            PlayerPrefs.DeleteKey("Shape2" + GameMode.ToString());
+            PlayerPrefs.DeleteKey("Shape3" + GameMode.ToString());
         }
 
         SceneManager.LoadScene("TBDGame");
@@ -60,7 +64,6 @@ public class TBDGame : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        ScoreText.GetComponent<TMPro.TextMeshProUGUI>().text = $"Score: {Score}";
         multFactor.x = Screen.width / defaultDimensions.x;
         multFactor.y = Screen.height / defaultDimensions.y;
 
@@ -92,12 +95,106 @@ public class TBDGame : MonoBehaviour
             }
             positionY -= tileHeight;
         }
+        
+        if (PlayerPrefs.HasKey("Shape1" + GameMode.ToString()))
+        {
+            string savedShape = PlayerPrefs.GetString("Shape1" + GameMode.ToString());
 
-        shape1 = InstantiateShape(TileSpawnPoint1.transform.position);
-        shape2 = InstantiateShape(TileSpawnPoint2.transform.position);
-        shape3 = InstantiateShape(TileSpawnPoint3.transform.position);
+            if (!string.IsNullOrEmpty(savedShape))
+            {
+                shape1 = new ParentTile();
+                shape1.Parent = Instantiate(new GameObject(), new Vector3(TileSpawnPoint1.transform.position.x, TileSpawnPoint1.transform.position.y), Quaternion.identity);
+
+                if (GameMode == GameModes.Classic)
+                {
+                    shape1.ChosenShape = Convert.ToInt32(savedShape);
+                    shape1.CreateChildrenFromShape(Tile, TileSpawnPoint1.transform.position, tileWidth, tileHeight);
+                }
+                else if (GameMode == GameModes.Random)
+                {
+                    shape1.ChosenChildren = savedShape.Split(',').Select(x => Convert.ToInt32(x)).ToList();
+                    shape1.CreateChildrenFromList(Tile, TileSpawnPoint1.transform.position, tileWidth, tileHeight);
+                }
+
+                shape1.Parent.transform.localScale /= 2.0f;
+            }
+            else
+            {
+                shape1 = null;
+            }
+        }
+        else
+        {
+            shape1 = InstantiateShape(TileSpawnPoint1.transform.position);
+        }
+
+        if (PlayerPrefs.HasKey("Shape2" + GameMode.ToString()))
+        {
+            string savedShape = PlayerPrefs.GetString("Shape2" + GameMode.ToString());
+
+            if (!string.IsNullOrEmpty(savedShape))
+            {
+                shape2 = new ParentTile();
+                shape2.Parent = Instantiate(new GameObject(), new Vector3(TileSpawnPoint2.transform.position.x, TileSpawnPoint2.transform.position.y), Quaternion.identity);
+
+                if (GameMode == GameModes.Classic)
+                {
+                    shape2.ChosenShape = Convert.ToInt32(savedShape);
+                    shape2.CreateChildrenFromShape(Tile, TileSpawnPoint2.transform.position, tileWidth, tileHeight);
+                }
+                else if (GameMode == GameModes.Random)
+                {
+                    shape2.ChosenChildren = savedShape.Split(',').Select(x => Convert.ToInt32(x)).ToList();
+                    shape2.CreateChildrenFromList(Tile, TileSpawnPoint2.transform.position, tileWidth, tileHeight);
+                }
+
+                shape2.Parent.transform.localScale /= 2.0f;
+            }
+            else
+            {
+                shape2 = null;
+            }
+        }
+        else
+        {
+            shape2 = InstantiateShape(TileSpawnPoint2.transform.position);
+        }
+
+        if (PlayerPrefs.HasKey("Shape3" + GameMode.ToString()))
+        {
+            string savedShape = PlayerPrefs.GetString("Shape3" + GameMode.ToString());
+
+            if (!string.IsNullOrEmpty(savedShape))
+            {
+                shape3 = new ParentTile();
+                shape3.Parent = Instantiate(new GameObject(), new Vector3(TileSpawnPoint3.transform.position.x, TileSpawnPoint3.transform.position.y), Quaternion.identity);
+
+                if (GameMode == GameModes.Classic)
+                {
+                    shape3.ChosenShape = Convert.ToInt32(savedShape);
+                    shape3.CreateChildrenFromShape(Tile, TileSpawnPoint3.transform.position, tileWidth, tileHeight);
+                }
+                else if (GameMode == GameModes.Random)
+                {
+                    shape3.ChosenChildren = savedShape.Split(',').Select(x => Convert.ToInt32(x)).ToList();
+                    shape3.CreateChildrenFromList(Tile, TileSpawnPoint3.transform.position, tileWidth, tileHeight);
+                }
+
+                shape3.Parent.transform.localScale /= 2.0f;
+            }
+            else
+            {
+                shape3 = null;
+            }
+        }
+        else
+        {
+            shape3 = InstantiateShape(TileSpawnPoint3.transform.position);
+        }
 
         GetBoardState();
+
+        ScoreText.GetComponent<TMPro.TextMeshProUGUI>().text = $"Score: {Score}";
     }
 
     ParentTile draggedObject;
@@ -196,36 +293,25 @@ public class TBDGame : MonoBehaviour
                         }
                     }
 
-                    if (GameMode == GameModes.Random)
+                    for (int i = 0; i < draggedObject.Parent.transform.childCount; i++)
                     {
-                        for (int i = 0; i < draggedObject.ChosenChildren.Count; i++)
+                        float nearestSpace = float.MaxValue;
+                        int nearX = 0, nearY = 0;
+                        for (int y = 0; y < 9; y++)
                         {
-                            float nearestSpace = float.MaxValue;
-                            int nearX = 0, nearY = 0;
-                            for (int y = 0; y < 9; y++)
+                            for (int x = 0; x < 9; x++)
                             {
-                                for (int x = 0; x < 9; x++)
+                                float distance = Vector2.Distance(draggedObject.Parent.transform.GetChild(i).position, GridPoints[x, y]);
+                                if (distance < nearestSpace)
                                 {
-                                    float distance = Vector2.Distance(draggedObject.Parent.transform.GetChild(i).position, GridPoints[x, y]);
-                                    if (distance < nearestSpace)
-                                    {
-                                        nearX = x;
-                                        nearY = y;
-                                        nearestSpace = distance;
-                                    }
+                                    nearX = x;
+                                    nearY = y;
+                                    nearestSpace = distance;
                                 }
                             }
-                            draggedObject.Parent.transform.GetChild(i).transform.position = GridPoints[nearX, nearY];
-                            CurrentTiles[nearX, nearY] = draggedObject.Parent.transform.GetChild(i).gameObject;
                         }
-                    }
-                    else if (GameMode == GameModes.Classic)
-                    {
-                        draggedObject.Parent.transform.position = new Vector3(tiletransform.x, tiletransform.y, 1.0f);
-                        for (int i = 0; i < Shapes.ShapesList[draggedObject.ChosenShape].Count; i++)
-                        {
-                            CurrentTiles[nearestX + Shapes.ShapesList[draggedObject.ChosenShape][i].Item1, nearestY + Shapes.ShapesList[draggedObject.ChosenShape][i].Item2] = draggedObject.Parent.transform.GetChild(i).gameObject;
-                        }
+                        draggedObject.Parent.transform.GetChild(i).transform.position = GridPoints[nearX, nearY];
+                        CurrentTiles[nearX, nearY] = draggedObject.Parent.transform.GetChild(i).gameObject;
                     }
 
                     draggedObject.Parent.transform.DetachChildren();
@@ -256,9 +342,12 @@ public class TBDGame : MonoBehaviour
                     CleanupBoard();
                     SaveBoardState();
                 }
+                else
+                {
+                    draggedObject.Parent.transform.position = originalPosition;
+                    draggedObject.Parent.transform.localScale /= 2.0f;
+                }
 
-                draggedObject.Parent.transform.position = originalPosition;
-                draggedObject.Parent.transform.localScale /= 2.0f;
                 draggedObject = null;
             }
         }
@@ -268,7 +357,7 @@ public class TBDGame : MonoBehaviour
     {
         if (GameMode == GameModes.Random)
         {
-            int tileCount = Random.Range(1, 101);
+            int tileCount = UnityEngine.Random.Range(1, 101);
 
             if (tileCount <= 5)
                 tileCount = 1;
@@ -289,128 +378,42 @@ public class TBDGame : MonoBehaviour
             else if (tileCount <= 100)
                 tileCount = 9;
 
-
             ParentTile parent = new ParentTile();
             parent.Parent = Instantiate(new GameObject(), new Vector3(position.x, position.y), Quaternion.identity);
-            parent.TileCount = tileCount;
+            parent.ChosenChildren = new List<int>();
 
-            if (tileCount == 1)
+            for (int i = 0; i < tileCount; i++)
             {
-                Instantiate(Tile, new Vector3(position.x, position.y), Quaternion.identity, parent.Parent.transform);
-                parent.ChosenChildren = new List<int>();
-                parent.ChosenChildren.Add(4);
+                int child = UnityEngine.Random.Range(0, 9);
 
-                parent.Parent.transform.localScale /= 2.0f; 
-                return parent;
-            }
-            else
-            {
-                List<int> chosenChildren = new List<int>();
-                for (int i = 0; i < tileCount; i++)
+                while (parent.ChosenChildren.Contains(child))
                 {
-                    int child = Random.Range(0, 16);
-
-                    while (chosenChildren.Contains(child))
-                    {
-                        child = Random.Range(0, 16);
-                    }
-
-                    if (child == 0)
-                        Instantiate(Tile, new Vector3(position.x - tileWidth, position.y + tileHeight), Quaternion.identity, parent.Parent.transform); // Bottom Left
-                    else if (child == 1)
-                        Instantiate(Tile, new Vector3(position.x, position.y + tileHeight), Quaternion.identity, parent.Parent.transform); // Bottom 1
-                    else if (child == 2)
-                        Instantiate(Tile, new Vector3(position.x + tileWidth, position.y + tileHeight), Quaternion.identity, parent.Parent.transform); // Bottom Right
-                    else if (child == 3)
-                        Instantiate(Tile, new Vector3(position.x - tileWidth, position.y), Quaternion.identity, parent.Parent.transform); // Left 1
-                    else if (child == 4)
-                        Instantiate(Tile, new Vector3(position.x, position.y), Quaternion.identity, parent.Parent.transform); // center
-                    else if (child == 5)
-                        Instantiate(Tile, new Vector3(position.x + tileWidth, position.y), Quaternion.identity, parent.Parent.transform); // Right 1
-                    else if (child == 6)
-                        Instantiate(Tile, new Vector3(position.x - tileWidth, position.y - tileHeight), Quaternion.identity, parent.Parent.transform);  // Top Left
-                    else if (child == 7)
-                        Instantiate(Tile, new Vector3(position.x, position.y - tileHeight), Quaternion.identity, parent.Parent.transform); // Up 1
-                    else if (child == 8)
-                        Instantiate(Tile, new Vector3(position.x + tileWidth, position.y - tileHeight), Quaternion.identity, parent.Parent.transform); // Top Right
-                    else if (child == 9)
-                        Instantiate(Tile, new Vector3(position.x, position.y + (tileHeight * 2)), Quaternion.identity, parent.Parent.transform); // Bottom 2
-                    else if (child == 10)
-                        Instantiate(Tile, new Vector3(position.x + tileWidth, position.y + (tileHeight * 2)), Quaternion.identity, parent.Parent.transform); // Bottom 2 Right 1
-                    else if (child == 11)
-                        Instantiate(Tile, new Vector3(position.x + (tileWidth * 2), position.y + (tileHeight * 2)), Quaternion.identity, parent.Parent.transform); // Bottom Right Corner
-                    else if (child == 12)
-                        Instantiate(Tile, new Vector3(position.x + (tileWidth * 2), position.y + tileHeight), Quaternion.identity, parent.Parent.transform); // Right 2 down 1
-                    else if (child == 13)
-                        Instantiate(Tile, new Vector3(position.x + (tileWidth * 2), position.y), Quaternion.identity, parent.Parent.transform); // Right 2
-                    else if (child == 14)
-                        Instantiate(Tile, new Vector3(position.x + (tileWidth * 2), position.y - tileHeight), Quaternion.identity, parent.Parent.transform);  // Right 2 up 1
-                    else if (child == 15)
-                        Instantiate(Tile, new Vector3(position.x - tileWidth, position.y + (tileHeight * 2)), Quaternion.identity, parent.Parent.transform); // Left 1 down 2
-
-
-                    chosenChildren.Add(child);
+                    child = UnityEngine.Random.Range(0, 9);
                 }
 
-                float sumX = 0;
-                for (int i = 0; i < chosenChildren.Count; i++)
-                {
-                    sumX += parent.Parent.transform.GetChild(i).position.x;
-                }
-                float centralX = sumX / chosenChildren.Count;
-
-                parent.RelativeX = parent.Parent.transform.position.x - centralX;
-                parent.Parent.transform.localScale /= 2.0f;
-                parent.ChosenChildren = chosenChildren;
-                return parent;
+                parent.ChosenChildren.Add(child);
             }
+
+            parent.CreateChildrenFromList(Tile, position, tileWidth, tileHeight);
+
+            parent.Parent.transform.localScale /= 2.0f;
+            return parent;
         }
         else if (GameMode == GameModes.Classic)
         {
-            int shape = Random.Range(0, Shapes.ShapesList.Count);
+            int shape = UnityEngine.Random.Range(0, Shapes.ShapesList.Count);
 
             ParentTile parent = new ParentTile();
             parent.Parent = Instantiate(new GameObject(), new Vector3(position.x, position.y), Quaternion.identity);
-            parent.TileCount = Shapes.ShapesList.Count;
             parent.ChosenShape = shape;
-
-
-            if (parent.TileCount == 1)
-            {
-                Instantiate(Tile, new Vector3(position.x, position.y), Quaternion.identity, parent.Parent.transform);
-                parent.Parent.transform.localScale /= 2.0f;
-                return parent;
-            }
-            else
-            {
-                List<int> chosenChildren = new List<int>();
-
-                for (int i = 0; i < Shapes.ShapesList[shape].Count; i++)
-                {
-                    float positionX = 0;
-                    float positionY = 0;
-
-                    if (Shapes.ShapesList[shape][i].Item1 > 0)
-                        positionX = tileWidth;
-                    else if (Shapes.ShapesList[shape][i].Item1 < 0)
-                        positionX = -tileWidth;
-
-                    if (Shapes.ShapesList[shape][i].Item2 > 0)
-                        positionY = tileHeight;
-                    else if (Shapes.ShapesList[shape][i].Item2 < 0)
-                        positionY = -tileHeight;
-
-                    Instantiate(Tile, new Vector3(position.x + positionX, position.y - positionY), Quaternion.identity, parent.Parent.transform);
-                }
-                parent.Parent.transform.localScale /= 2.0f;
-                return parent;
-            }
+            parent.CreateChildrenFromShape(Tile, position, tileWidth, tileHeight);
+            parent.Parent.transform.localScale /= 2.0f;
+            return parent;
         }
         else
         {
             ParentTile parent = new ParentTile();
             parent.Parent = Instantiate(new GameObject(), new Vector3(position.x, position.y), Quaternion.identity);
-            parent.TileCount = 0;
             parent.Parent.transform.localScale /= 2.0f;
             return parent;
         }
@@ -419,6 +422,7 @@ public class TBDGame : MonoBehaviour
     void CleanupBoard()
     {
         List<GameObject> listDestroyed = new List<GameObject>();
+        List<Vector2Int> listDestroyedGrid = new List<Vector2Int>();
         int multFactor = 0;
         for (int y = 0; y < 9; y++)
         {
@@ -441,6 +445,7 @@ public class TBDGame : MonoBehaviour
                 for (int x = 0; x < 9; x++)
                 {
                     listDestroyed.Add(CurrentTiles[x, y]);
+                    listDestroyedGrid.Add(new Vector2Int(x, y));
                 }
             }
         }
@@ -466,7 +471,10 @@ public class TBDGame : MonoBehaviour
                 for (int y = 0; y < 9; y++)
                 {
                     if (!listDestroyed.Contains(CurrentTiles[x, y]))
+                    {
                         listDestroyed.Add(CurrentTiles[x, y]);
+                        listDestroyedGrid.Add(new Vector2Int(x, y));
+                    }
                 }
             }
         }
@@ -495,7 +503,10 @@ public class TBDGame : MonoBehaviour
                         for (int x = j * 3; x < (j * 3) + 3; x++)
                         {
                             if (!listDestroyed.Contains(CurrentTiles[x, y]))
+                            {
                                 listDestroyed.Add(CurrentTiles[x, y]);
+                                listDestroyedGrid.Add(new Vector2Int(x, y));
+                            }
                         }
                     }
                 }
@@ -513,6 +524,11 @@ public class TBDGame : MonoBehaviour
         foreach (var go in listDestroyed)
         {
             Destroy(go);
+        }
+
+        foreach (var v in listDestroyedGrid)
+        {
+            CurrentTiles[v.x, v.y] = null;
         }
     }
 
@@ -555,6 +571,19 @@ public class TBDGame : MonoBehaviour
 
         PlayerPrefs.SetString("BoardState" + GameMode.ToString(), json);
         PlayerPrefs.SetInt("Score" + GameMode.ToString(), Score);
+
+        if (GameMode == GameModes.Classic)
+        {
+            PlayerPrefs.SetString("Shape1" + GameMode.ToString(), shape1 != null ? shape1.ChosenShape.ToString() : "");
+            PlayerPrefs.SetString("Shape2" + GameMode.ToString(), shape2 != null ? shape2.ChosenShape.ToString() : "");
+            PlayerPrefs.SetString("Shape3" + GameMode.ToString(), shape3 != null ? shape3.ChosenShape.ToString() : "");
+        }
+        else if (GameMode == GameModes.Random)
+        {
+            PlayerPrefs.SetString("Shape1" + GameMode.ToString(), shape1 != null ? string.Join(',', shape1.ChosenChildren) : "");
+            PlayerPrefs.SetString("Shape2" + GameMode.ToString(), shape2 != null ? string.Join(',', shape2.ChosenChildren) : "");
+            PlayerPrefs.SetString("Shape3" + GameMode.ToString(), shape3 != null ? string.Join(',', shape3.ChosenChildren) : "");
+        }
     }
 
     IEnumerator PostRequest(string uri, int score)
@@ -591,10 +620,72 @@ public class TBDGame : MonoBehaviour
     class ParentTile
     {
         public GameObject Parent { get; set; }
-        public int TileCount { get; set; }
         public int ChosenShape { get; set; }
         public float RelativeX { get; set; } = 0;
         public List<int> ChosenChildren { get; set; }
+
+        public void CreateChildrenFromList(GameObject Tile, Vector3 position, float tileWidth, float tileHeight)
+        {
+            foreach (var child in ChosenChildren)
+            {
+                if (child == 0)
+                    Instantiate(Tile, new Vector3(position.x - tileWidth, position.y + tileHeight), Quaternion.identity, Parent.transform); // Bottom Left
+                else if (child == 1)
+                    Instantiate(Tile, new Vector3(position.x, position.y + tileHeight), Quaternion.identity, Parent.transform); // Bottom 1
+                else if (child == 2)
+                    Instantiate(Tile, new Vector3(position.x + tileWidth, position.y + tileHeight), Quaternion.identity, Parent.transform); // Bottom Right
+                else if (child == 3)
+                    Instantiate(Tile, new Vector3(position.x - tileWidth, position.y), Quaternion.identity, Parent.transform); // Left 1
+                else if (child == 4)
+                    Instantiate(Tile, new Vector3(position.x, position.y), Quaternion.identity, Parent.transform); // center
+                else if (child == 5)
+                    Instantiate(Tile, new Vector3(position.x + tileWidth, position.y), Quaternion.identity, Parent.transform); // Right 1
+                else if (child == 6)
+                    Instantiate(Tile, new Vector3(position.x - tileWidth, position.y - tileHeight), Quaternion.identity, Parent.transform);  // Top Left
+                else if (child == 7)
+                    Instantiate(Tile, new Vector3(position.x, position.y - tileHeight), Quaternion.identity, Parent.transform); // Up 1
+                else if (child == 8)
+                    Instantiate(Tile, new Vector3(position.x + tileWidth, position.y - tileHeight), Quaternion.identity, Parent.transform); // Top Right
+                /*else if (child == 9)
+                    Instantiate(Tile, new Vector3(position.x, position.y + (tileHeight * 2)), Quaternion.identity, parent.Parent.transform); // Bottom 2
+                else if (child == 10)
+                    Instantiate(Tile, new Vector3(position.x + tileWidth, position.y + (tileHeight * 2)), Quaternion.identity, parent.Parent.transform); // Bottom 2 Right 1
+                else if (child == 11)
+                    Instantiate(Tile, new Vector3(position.x + (tileWidth * 2), position.y + (tileHeight * 2)), Quaternion.identity, parent.Parent.transform); // Bottom Right Corner
+                else if (child == 12)
+                    Instantiate(Tile, new Vector3(position.x + (tileWidth * 2), position.y + tileHeight), Quaternion.identity, parent.Parent.transform); // Right 2 down 1
+                else if (child == 13)
+                    Instantiate(Tile, new Vector3(position.x + (tileWidth * 2), position.y), Quaternion.identity, parent.Parent.transform); // Right 2
+                else if (child == 14)
+                    Instantiate(Tile, new Vector3(position.x + (tileWidth * 2), position.y - tileHeight), Quaternion.identity, parent.Parent.transform);  // Right 2 up 1
+                else if (child == 15)
+                    Instantiate(Tile, new Vector3(position.x - tileWidth, position.y + (tileHeight * 2)), Quaternion.identity, parent.Parent.transform); // Left 1 down 2
+                */
+            }
+
+            float sumX = 0;
+            for (int i = 0; i < ChosenChildren.Count; i++)
+            {
+                sumX += Parent.transform.GetChild(i).position.x;
+            }
+            float centralX = sumX / ChosenChildren.Count;
+
+            RelativeX = Parent.transform.position.x - centralX;
+        }
+
+        public void CreateChildrenFromShape(GameObject Tile, Vector3 position, float tileWidth, float tileHeight)
+        {
+            for (int i = 0; i < Shapes.ShapesList[ChosenShape].Count; i++)
+            {
+                float positionX = 0;
+                float positionY = 0;
+
+                positionX = (tileWidth * Shapes.ShapesList[ChosenShape][i].Item1);
+                positionY = (tileHeight * Shapes.ShapesList[ChosenShape][i].Item2);
+
+                Instantiate(Tile, new Vector3(position.x + positionX, position.y + positionY), Quaternion.identity, Parent.transform);
+            }
+        }
     }
 
     [System.Serializable]

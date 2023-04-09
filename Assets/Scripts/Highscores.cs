@@ -23,15 +23,6 @@ public class Highscores : MonoBehaviour
     public void StartScreen()
     {
         SceneManager.LoadScene("StartScreen");
-
-        if (gameMode == GameModes.Classic)
-        {
-            GameModeButton.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Classic";
-        }
-        else
-        {
-            GameModeButton.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Random";
-        }
     }
 
     public void ChangeGameMode()
@@ -72,6 +63,15 @@ public class Highscores : MonoBehaviour
 
         names.text = string.Empty;
         scores.text = string.Empty;
+
+        if (gameMode == GameModes.Classic)
+        {
+            GameModeButton.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Classic";
+        }
+        else
+        {
+            GameModeButton.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Random";
+        }
 
         StartCoroutine(GetRequest("http://api.angryelfgames.com/angryelf/gethighscores/" + TBDGame.UserID));
     }
