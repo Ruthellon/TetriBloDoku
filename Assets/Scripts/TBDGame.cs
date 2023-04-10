@@ -61,6 +61,11 @@ public class TBDGame : MonoBehaviour
         SceneManager.LoadScene("HighScores");
     }
 
+    public void Home()
+    {
+        SceneManager.LoadScene("StartScreen");
+    }
+
     // Start is called before the first frame update
     void Start()
     {
