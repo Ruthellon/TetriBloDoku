@@ -7,6 +7,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class TBDGame : MonoBehaviour
 {
@@ -14,14 +15,21 @@ public class TBDGame : MonoBehaviour
     public static string UserID;
     public static GameModes GameMode = GameModes.Classic;
 
+    public GameObject Canvas;
+    public GameObject Background;
     public GameObject SudokuGrid;
     public GameObject Highlight;
     public GameObject Tile;
+    public GameObject Tile2;
     public GameObject TileSpawnPoint1;
     public GameObject TileSpawnPoint2;
     public GameObject TileSpawnPoint3;
     public ParticleSystem Explosion;
     public GameObject ScoreText;
+    public GameObject MultiplierText;
+
+    public Sprite Background1;
+    public Sprite Background2;
 
     ParentTile shape1;
     ParentTile shape2;
@@ -43,7 +51,37 @@ public class TBDGame : MonoBehaviour
 
     public void RestartLevel()
     {
-        StartCoroutine(PostRequest("http://api.angryelfgames.com/AngryElf/InputHighScore", Score));
+        Highscores.HighScoreList list = new Highscores.HighScoreList();
+        if (PlayerPrefs.HasKey("Highscores" + GameMode.ToString()))
+        {
+            list = JsonUtility.FromJson<Highscores.HighScoreList>(PlayerPrefs.GetString("Highscores" + GameMode.ToString()));
+        }
+
+        if (list.highscores == null)
+            list.highscores = new Highscores.HighScoreResponse[15];
+
+        for (int i = 0; i < list.highscores.Length; i++)
+        {
+            if (list.highscores[i] == null)
+                list.highscores[i] = new Highscores.HighScoreResponse();
+
+            if (Score > list.highscores[i].score)
+            {
+                list.highscores[i] = new Highscores.HighScoreResponse()
+                {
+                    username = Username,
+                    score = Score,
+                    dateAchieved = DateTime.Now,
+                    gameMode = (int)GameMode
+                };
+
+                break;
+            }
+        }
+
+        PlayerPrefs.SetString("Highscores" + GameMode.ToString(), JsonUtility.ToJson(list));
+
+        //StartCoroutine(PostRequest("http://api.angryelfgames.com/AngryElf/InputHighScore", Score));
 
         if (PlayerPrefs.HasKey("BoardState" + GameMode.ToString()))
         {
@@ -69,19 +107,33 @@ public class TBDGame : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        multFactor.x = Screen.width / defaultDimensions.x;
-        multFactor.y = Screen.height / defaultDimensions.y;
-
-        //Tile.transform.localScale = new Vector3(Tile.transform.localScale.x * multFactor.x, Tile.transform.localScale.y * multFactor.y, Tile.transform.localScale.z);
+        if (GameMode == GameModes.Classic)
+            Background.GetComponent<UnityEngine.UI.Image>().sprite = Background1;
+        else if (GameMode == GameModes.Random)
+            Background.GetComponent<UnityEngine.UI.Image>().sprite = Background2;
 
         Vector3 gridPosition = Camera.main.WorldToScreenPoint(SudokuGrid.transform.position);
 
-        Vector3 screenBottomLeft = Camera.main.ScreenToWorldPoint(new Vector3(0, 0, 0));
-        Vector3 screenTopRight = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height, 0));
-
-        float widthDiff = (Screen.width - (SudokuGrid.GetComponent<RectTransform>().rect.width * multFactor.x)) / 2.0f;
-        GridTopLeft = Camera.main.ScreenToWorldPoint(new Vector3(widthDiff + 6.0f, (gridPosition.y + ((SudokuGrid.GetComponent<RectTransform>().rect.height * multFactor.y) / 2.0f)) - 6.0f));
-        GridBottomRight = Camera.main.ScreenToWorldPoint(new Vector3((gridPosition.x + ((SudokuGrid.GetComponent<RectTransform>().rect.width * multFactor.x) / 2.0f)) - 6.0f, (gridPosition.y - ((SudokuGrid.GetComponent<RectTransform>().rect.height * multFactor.y) / 2.0f)) + 6.0f));
+        if (Screen.width > 1200)
+        {
+            GridTopLeft = Camera.main.ScreenToWorldPoint(new Vector3(gridPosition.x - (SudokuGrid.GetComponent<RectTransform>().rect.width / 2.0f) + 30, gridPosition.y + (SudokuGrid.GetComponent<RectTransform>().rect.height / 2.0f) - 30));
+            GridBottomRight = Camera.main.ScreenToWorldPoint(new Vector3(gridPosition.x + (SudokuGrid.GetComponent<RectTransform>().rect.width / 2.0f) - 30, gridPosition.y - (SudokuGrid.GetComponent<RectTransform>().rect.height / 2.0f) + 30));
+        }
+        else if (Screen.width > 1100)
+        {
+            GridTopLeft = Camera.main.ScreenToWorldPoint(new Vector3(gridPosition.x - (Screen.width / 2.0f) + 20f, gridPosition.y + (Screen.width / 2.0f) - 20f));
+            GridBottomRight = Camera.main.ScreenToWorldPoint(new Vector3(gridPosition.x + (Screen.width / 2.0f) - 20f, gridPosition.y - (Screen.width / 2.0f) + 20f));
+        }
+        else if (Screen.width > 800)
+        {
+            GridTopLeft = Camera.main.ScreenToWorldPoint(new Vector3(gridPosition.x - (Screen.width / 2.0f) + 15f, gridPosition.y + (Screen.width / 2.0f) - 15f));
+            GridBottomRight = Camera.main.ScreenToWorldPoint(new Vector3(gridPosition.x + (Screen.width / 2.0f) - 15f, gridPosition.y - (Screen.width / 2.0f) + 15f));
+        }
+        else
+        {
+            GridTopLeft = Camera.main.ScreenToWorldPoint(new Vector3(gridPosition.x - (Screen.width / 2.0f) + 50f, gridPosition.y + (Screen.width / 2.0f) - 50f));
+            GridBottomRight = Camera.main.ScreenToWorldPoint(new Vector3(gridPosition.x + (Screen.width / 2.0f) - 50f, gridPosition.y - (Screen.width / 2.0f) + 50f));
+        }
 
         float gridWidth = GridBottomRight.x - GridTopLeft.x;
         float gridHeight = GridTopLeft.y - GridBottomRight.y;
@@ -118,7 +170,7 @@ public class TBDGame : MonoBehaviour
                 else if (GameMode == GameModes.Random)
                 {
                     shape1.ChosenChildren = savedShape.Split(',').Select(x => Convert.ToInt32(x)).ToList();
-                    shape1.CreateChildrenFromList(Tile, TileSpawnPoint1.transform.position, tileWidth, tileHeight);
+                    shape1.CreateChildrenFromList(Tile2, TileSpawnPoint1.transform.position, tileWidth, tileHeight);
                 }
 
                 shape1.Parent.transform.localScale /= 2.0f;
@@ -150,7 +202,7 @@ public class TBDGame : MonoBehaviour
                 else if (GameMode == GameModes.Random)
                 {
                     shape2.ChosenChildren = savedShape.Split(',').Select(x => Convert.ToInt32(x)).ToList();
-                    shape2.CreateChildrenFromList(Tile, TileSpawnPoint2.transform.position, tileWidth, tileHeight);
+                    shape2.CreateChildrenFromList(Tile2, TileSpawnPoint2.transform.position, tileWidth, tileHeight);
                 }
 
                 shape2.Parent.transform.localScale /= 2.0f;
@@ -182,7 +234,7 @@ public class TBDGame : MonoBehaviour
                 else if (GameMode == GameModes.Random)
                 {
                     shape3.ChosenChildren = savedShape.Split(',').Select(x => Convert.ToInt32(x)).ToList();
-                    shape3.CreateChildrenFromList(Tile, TileSpawnPoint3.transform.position, tileWidth, tileHeight);
+                    shape3.CreateChildrenFromList(Tile2, TileSpawnPoint3.transform.position, tileWidth, tileHeight);
                 }
 
                 shape3.Parent.transform.localScale /= 2.0f;
@@ -200,8 +252,11 @@ public class TBDGame : MonoBehaviour
         GetBoardState();
 
         ScoreText.GetComponent<TMPro.TextMeshProUGUI>().text = $"Score: {Score}";
+        MultiplierText.GetComponent<TMPro.TextMeshProUGUI>().text = $"x{multiplier+1}";
     }
 
+    int multiplier = 0;
+    float timeForMultiplier = 0f;
     ParentTile draggedObject;
     GameObject highlightedTile;
     Vector3 originalPosition;
@@ -209,6 +264,15 @@ public class TBDGame : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (timeForMultiplier > 0)
+            timeForMultiplier -= Time.deltaTime;
+
+        if (multiplier > 0 && timeForMultiplier <= 0f)
+        {
+            multiplier = 0;
+            MultiplierText.GetComponent<TMPro.TextMeshProUGUI>().text = $"x{multiplier + 1}";
+        }
+
         if (Input.touchCount > 0)
         {
             Vector2 mousePositionOrig = Camera.main.ScreenToWorldPoint(Input.GetTouch(0).position);
@@ -364,19 +428,19 @@ public class TBDGame : MonoBehaviour
         {
             int tileCount = UnityEngine.Random.Range(1, 101);
 
-            if (tileCount <= 5)
+            if (tileCount <= 10)
                 tileCount = 1;
-            else if (tileCount <= 20)
+            else if (tileCount <= 30)
                 tileCount = 2;
-            else if (tileCount <= 40)
-                tileCount = 3;
             else if (tileCount <= 60)
+                tileCount = 3;
+            else if (tileCount <= 75)
                 tileCount = 4;
-            else if (tileCount <= 80)
+            else if (tileCount <= 85)
                 tileCount = 5;
-            else if (tileCount <= 90)
+            else if (tileCount <= 93)
                 tileCount = 6;
-            else if (tileCount <= 96)
+            else if (tileCount <= 97)
                 tileCount = 7;
             else if (tileCount <= 99)
                 tileCount = 8;
@@ -399,7 +463,7 @@ public class TBDGame : MonoBehaviour
                 parent.ChosenChildren.Add(child);
             }
 
-            parent.CreateChildrenFromList(Tile, position, tileWidth, tileHeight);
+            parent.CreateChildrenFromList(Tile2, position, tileWidth, tileHeight);
 
             parent.Parent.transform.localScale /= 2.0f;
             return parent;
@@ -428,7 +492,6 @@ public class TBDGame : MonoBehaviour
     {
         List<GameObject> listDestroyed = new List<GameObject>();
         List<Vector2Int> listDestroyedGrid = new List<Vector2Int>();
-        int multFactor = 0;
         for (int y = 0; y < 9; y++)
         {
             int rowCount = 0;
@@ -446,7 +509,7 @@ public class TBDGame : MonoBehaviour
 
             if (rowCount == 9)
             {
-                multFactor++;
+                multiplier++;
                 for (int x = 0; x < 9; x++)
                 {
                     listDestroyed.Add(CurrentTiles[x, y]);
@@ -472,7 +535,7 @@ public class TBDGame : MonoBehaviour
 
             if (columnCount == 9)
             {
-                multFactor++;
+                multiplier++;
                 for (int y = 0; y < 9; y++)
                 {
                     if (!listDestroyed.Contains(CurrentTiles[x, y]))
@@ -502,7 +565,7 @@ public class TBDGame : MonoBehaviour
 
                 if (squareCount == 9)
                 {
-                    multFactor++;
+                    multiplier++;
                     for (int y = i * 3; y < (i * 3) + 3; y++)
                     {
                         for (int x = j * 3; x < (j * 3) + 3; x++)
@@ -522,7 +585,8 @@ public class TBDGame : MonoBehaviour
         {
             Explosion.Play();
 
-            Score += (listDestroyed.Count * multFactor);
+            Score += (listDestroyed.Count * multiplier);
+            timeForMultiplier = 5f;
             ScoreText.GetComponent<TMPro.TextMeshProUGUI>().text = $"Score: {Score}";
         }
 
@@ -535,6 +599,8 @@ public class TBDGame : MonoBehaviour
         {
             CurrentTiles[v.x, v.y] = null;
         }
+
+        MultiplierText.GetComponent<TMPro.TextMeshProUGUI>().text = $"x{multiplier + 1}";
     }
 
     void GetBoardState()
@@ -550,7 +616,11 @@ public class TBDGame : MonoBehaviour
                 {
                     int x = i % 9;
                     int y = i / 9;
-                    CurrentTiles[x, y] = Instantiate(Tile, GridPoints[x, y], Quaternion.identity);
+
+                    if (GameMode == GameModes.Classic)
+                        CurrentTiles[x, y] = Instantiate(Tile, GridPoints[x, y], Quaternion.identity);
+                    else if (GameMode == GameModes.Random)
+                        CurrentTiles[x, y] = Instantiate(Tile2, GridPoints[x, y], Quaternion.identity);
                 }
             }
         }

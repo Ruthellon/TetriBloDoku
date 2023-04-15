@@ -37,10 +37,11 @@ public class Highscores : MonoBehaviour
             gameMode = GameModes.Random;
             GameModeButton.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Random";
         }
-        if (justMe)
-            GetJustMe();
-        else
-            GetAll();
+        GetLocalScores();
+        //if (justMe)
+        //    GetJustMe();
+        //else
+        //    GetAll();
     }
 
     public void GetAll()
@@ -73,7 +74,31 @@ public class Highscores : MonoBehaviour
             GameModeButton.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Random";
         }
 
-        StartCoroutine(GetRequest("http://api.angryelfgames.com/angryelf/gethighscores/" + TBDGame.UserID));
+        GetLocalScores();
+
+        //StartCoroutine(GetRequest("http://api.angryelfgames.com/angryelf/gethighscores/" + TBDGame.UserID));
+    }
+
+    void GetLocalScores()
+    {
+        if (PlayerPrefs.HasKey("Highscores" + gameMode.ToString()))
+        {
+            HighScoreList list = JsonUtility.FromJson<HighScoreList>(PlayerPrefs.GetString("Highscores" + gameMode.ToString()));
+
+            if (list != null)
+            {
+                List<string> responseNames = list.highscores.Where(y => y.gameMode == (int)gameMode).Select(x => x.username).ToList();
+                names.text = String.Join(Environment.NewLine, responseNames);
+
+                List<int> responseScores = list.highscores.Where(y => y.gameMode == (int)gameMode).Select(x => x.score).ToList();
+                scores.text = String.Join(Environment.NewLine, responseScores);
+            }
+        }
+        else
+        {
+            names.text = "";
+            scores.text = "";
+        }
     }
 
     IEnumerator GetRequest(string uri)
@@ -85,7 +110,7 @@ public class Highscores : MonoBehaviour
 
             if (webRequest.result == UnityWebRequest.Result.Success)
             {
-                RootObject response = JsonUtility.FromJson<RootObject>("{\"highscores\":" + webRequest.downloadHandler.text + "}");
+                HighScoreList response = JsonUtility.FromJson<HighScoreList>("{\"highscores\":" + webRequest.downloadHandler.text + "}");
                 
                 if (response != null)
                 {
@@ -115,7 +140,7 @@ public class Highscores : MonoBehaviour
     }
 
     [Serializable]
-    public class RootObject
+    public class HighScoreList
     {
         public HighScoreResponse[] highscores;
     }
