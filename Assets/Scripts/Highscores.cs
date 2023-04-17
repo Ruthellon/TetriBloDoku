@@ -13,6 +13,7 @@ public class Highscores : MonoBehaviour
     public GameObject Names;
     public GameObject Scores;
     public GameObject GameModeButton;
+    public GameObject UserModeButton;
 
     TMPro.TextMeshProUGUI names;
     TMPro.TextMeshProUGUI scores;
@@ -32,28 +33,50 @@ public class Highscores : MonoBehaviour
             gameMode = GameModes.Classic;
             GameModeButton.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Classic";
         }
-        else
+        else if (gameMode == GameModes.Twist)
         {
             gameMode = GameModes.Random;
             GameModeButton.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Random";
         }
-        GetLocalScores();
-        //if (justMe)
-        //    GetJustMe();
-        //else
-        //    GetAll();
+        else if (gameMode == GameModes.Classic)
+        {
+            gameMode = GameModes.Twist;
+            GameModeButton.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Twist";
+        }
+        
+        if (justMe)
+            GetLocalScores();
+        else
+            StartCoroutine(GetRequest("http://api.angryelfgames.com/angryelf/gethighscores"));
     }
 
-    public void GetAll()
+    public void ChangeUserMode()
     {
-        justMe = false;
-        StartCoroutine(GetRequest("http://api.angryelfgames.com/angryelf/gethighscores"));
+        if (justMe)
+        {
+            justMe = false;
+            UserModeButton.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Global";
+            StartCoroutine(GetRequest("http://api.angryelfgames.com/angryelf/gethighscores"));
+        }
+        else
+        {
+            justMe = true;
+            UserModeButton.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Just Me";
+            GetLocalScores();
+        }
     }
 
-    public void GetJustMe()
+    public void ClearHighScores()
     {
-        justMe = true;
-        StartCoroutine(GetRequest("http://api.angryelfgames.com/angryelf/gethighscores/" + TBDGame.UserID));
+        if (justMe)
+        {
+            if (PlayerPrefs.HasKey("Highscores" + gameMode.ToString()))
+            {
+                PlayerPrefs.DeleteKey("Highscores" + gameMode.ToString());
+            }
+
+            GetLocalScores();
+        }
     }
 
     // Start is called before the first frame update
@@ -69,9 +92,13 @@ public class Highscores : MonoBehaviour
         {
             GameModeButton.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Classic";
         }
-        else
+        else if (gameMode == GameModes.Random)
         {
             GameModeButton.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Random";
+        }
+        else if (gameMode == GameModes.Twist)
+        {
+            GameModeButton.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Twist";
         }
 
         GetLocalScores();
@@ -114,10 +141,32 @@ public class Highscores : MonoBehaviour
                 
                 if (response != null)
                 {
-                    List<string> responseNames = response.highscores.Where(y => y.gameMode == (int)gameMode).Select(x => x.username).ToList();
+                    List<HighScoreResponse> highscores = response.highscores.Where(x => x.gameMode == (int)gameMode).ToList();
+                    highscores.RemoveAll(x => 
+                        x.username.ToLower() == "ass" ||
+                        x.username.ToLower() == "cum" ||
+                        x.username.ToLower() == "fag" ||
+                        x.username.ToLower() == "gay" ||
+                        x.username.ToLower() == "jew" ||
+                        x.username.ToLower() == "tit" ||
+                        x.username.ToLower() == "cunt" ||
+                        x.username.ToLower() == "fuck" ||
+                        x.username.ToLower() == "feck" ||
+                        x.username.ToLower() == "fick" ||
+                        x.username.ToLower() == "fock" ||
+                        x.username.ToLower() == "foak" ||
+                        x.username.ToLower() == "jism" ||
+                        x.username.ToLower() == "gism" ||
+                        x.username.ToLower() == "jizz" ||
+                        x.username.ToLower() == "shit" ||
+                        x.username.ToLower() == "slut" ||
+                        x.username.ToLower() == "twat" ||
+                        x.username.ToLower() == "tits");
+
+                    List<string> responseNames = highscores.Select(x => x.username.Substring(0,4)).ToList();
                     names.text = String.Join(Environment.NewLine, responseNames);
 
-                    List<int> responseScores = response.highscores.Where(y => y.gameMode == (int)gameMode).Select(x => x.score).ToList();
+                    List<int> responseScores = highscores.Select(x => x.score).ToList();
                     scores.text = String.Join(Environment.NewLine, responseScores);
                 }
             }
