@@ -465,7 +465,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 38731954}
   m_HandleRect: {fileID: 38731953}
   m_Direction: 0
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -800,7 +800,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -141.20001}
+  m_AnchoredPosition: {x: 0, y: -141.19995}
   m_SizeDelta: {x: 799.5, y: 117.99}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &260969818
@@ -934,7 +934,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0.000061035156}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 300}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &838101922
@@ -1251,7 +1251,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -83.23563, y: 75.80701}
+  m_AnchoredPosition: {x: -100, y: 100}
   m_SizeDelta: {x: 150, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &969041661
@@ -1563,8 +1563,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 8.5, y: -526}
-  m_SizeDelta: {x: 800, y: 1281.0962}
+  m_AnchoredPosition: {x: 8.5, y: -430.90002}
+  m_SizeDelta: {x: 800, y: 1161.8}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1828255233
 MonoBehaviour:
@@ -1586,18 +1586,24 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "1.5.4\n- Fixed issue with blocks not aligning on certain displays.\n-
-    Implemented a rotation feature in Random mode, as well as in the new mode Twist.\n-
-    Added a few new pieces to Classic and Twist.\n\n1.5.3\n- Fixed views for different
-    devices.\n- New background and tile sprite for random mode.\n- Fixed multiplier
-    timer.\n- Now shows your multiplier.\n\n1.5.2\n- New Icon, new name (TetriBloDoku
-    -> TetriDoku).\n- Made the game grid slightly transparent.\n- First Publish Version!\n\n1.5.1\n-
-    Redid highscore page in preparation for publishing.\n- Added a multiplier factor
-    based on speed of deleting blocks.\n\n1.5 \n- Implemented backgrounds, sprites,
-    and other visuals to help improve the look of the game. \n- Added a Patch Notes
-    page for those interested in seeing what changes have come about.\n- Increased
-    the chance of a 1 block appearing in 'Random' mode from 5% -> 10%, adjusted other
-    blocks accordingly. Should see a greater amount of 1/2/3 blocks appear than before."
+  m_text: "1.5.5\n- Brought back online highscores. Highscores now shows an option
+    to see top global scores. Names (or initials) are truncated to 4 characters and
+    scanned for innapropriate names.\n- Added ability to clear local highscores.\n-
+    Added a Support the Developer page.\n- Blocks will now attempt to align just
+    above the touch spot for better view and so they aren't hidden behind the finger,
+    or unable to go to the side.\n\n1.5.4\n- Fixed issue with blocks not aligning
+    on certain displays.\n- Implemented a rotation feature in Random mode, as well
+    as in the new mode Twist.\n- Added a few new pieces to Classic and Twist.\n\n1.5.3\n-
+    Fixed views for different devices.\n- New background and tile sprite for random
+    mode.\n- Fixed multiplier timer.\n- Now shows your multiplier.\n\n1.5.2\n- New
+    Icon, new name (TetriBloDoku -> TetriDoku).\n- Made the game grid slightly transparent.\n-
+    First Publish Version!\n\n1.5.1\n- Redid highscore page in preparation for publishing.\n-
+    Added a multiplier factor based on speed of deleting blocks.\n\n1.5 \n- Implemented
+    backgrounds, sprites, and other visuals to help improve the look of the game.
+    \n- Added a Patch Notes page for those interested in seeing what changes have
+    come about.\n- Increased the chance of a 1 block appearing in 'Random' mode from
+    5% -> 10%, adjusted other blocks accordingly. Should see a greater amount of
+    1/2/3 blocks appear than before."
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}

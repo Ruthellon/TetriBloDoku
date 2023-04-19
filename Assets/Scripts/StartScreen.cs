@@ -49,6 +49,11 @@ public class StartScreen : MonoBehaviour
         SceneManager.LoadScene("PatchNotes");
     }
 
+    public void SupportDeveloper()
+    {
+        SceneManager.LoadScene("Paypal");
+    }
+
     public void HighScores()
     {
         if (!string.IsNullOrEmpty(TBDGame.Username) || InputName.GetComponent<TMPro.TMP_InputField>().text != TBDGame.Username)

@@ -2390,7 +2390,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 864790147}
         m_TargetAssemblyTypeName: StartScreen, Assembly-CSharp
-        m_MethodName: PatchNotes
+        m_MethodName: SupportDeveloper
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
