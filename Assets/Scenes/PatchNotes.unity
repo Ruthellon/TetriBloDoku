@@ -935,7 +935,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 300}
+  m_SizeDelta: {x: 0, y: 1165.7}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &838101922
 GameObject:
@@ -970,10 +970,10 @@ RectTransform:
   m_Father: {fileID: 80107020}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0}
-  m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 0, y: 156.95386}
-  m_SizeDelta: {x: 799.5, y: 312.7776}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 400, y: 125}
+  m_SizeDelta: {x: 703, y: 183}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &838101924
 MonoBehaviour:
@@ -1491,6 +1491,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f231c4fb786f3946a6b90b886c48677, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_SendPointerHoverToParent: 1
   m_HorizontalAxis: Horizontal
   m_VerticalAxis: Vertical
   m_SubmitButton: Submit
@@ -1563,8 +1564,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 8.5, y: -430.90002}
-  m_SizeDelta: {x: 800, y: 1161.8}
+  m_AnchoredPosition: {x: 0, y: -0.0099487305}
+  m_SizeDelta: {x: 774.51, y: 1165.7}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1828255233
 MonoBehaviour:
@@ -1586,24 +1587,46 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "1.5.5\n- Brought back online highscores. Highscores now shows an option
-    to see top global scores. Names (or initials) are truncated to 4 characters and
-    scanned for innapropriate names.\n- Added ability to clear local highscores.\n-
-    Added a Support the Developer page.\n- Blocks will now attempt to align just
-    above the touch spot for better view and so they aren't hidden behind the finger,
-    or unable to go to the side.\n\n1.5.4\n- Fixed issue with blocks not aligning
-    on certain displays.\n- Implemented a rotation feature in Random mode, as well
-    as in the new mode Twist.\n- Added a few new pieces to Classic and Twist.\n\n1.5.3\n-
-    Fixed views for different devices.\n- New background and tile sprite for random
-    mode.\n- Fixed multiplier timer.\n- Now shows your multiplier.\n\n1.5.2\n- New
-    Icon, new name (TetriBloDoku -> TetriDoku).\n- Made the game grid slightly transparent.\n-
-    First Publish Version!\n\n1.5.1\n- Redid highscore page in preparation for publishing.\n-
-    Added a multiplier factor based on speed of deleting blocks.\n\n1.5 \n- Implemented
-    backgrounds, sprites, and other visuals to help improve the look of the game.
-    \n- Added a Patch Notes page for those interested in seeing what changes have
-    come about.\n- Increased the chance of a 1 block appearing in 'Random' mode from
-    5% -> 10%, adjusted other blocks accordingly. Should see a greater amount of
-    1/2/3 blocks appear than before."
+  m_text: "1.5.8\n- Weights now downloaded from API every so often so that updates
+    to chance of block appearing can be adjusted without a new version needing to
+    be pushed out. A local copy exists with standard weights in case API unavailable.\n-
+    High score screen adjustments to better show a long list of top scores.\n- Bug
+    Fixes\n- Developer based settings screen which will show the types of blocks
+    and their chance of appearing. Also includes a delete data button which will
+    delete most local data (excluding high score data which can be deleted from the
+    high score screen).\n- New Sounds! Sound for placing blocks. And a sound for
+    rotating blocks.\n- Implemented a 'Visual Aid' which will add a semi-transparent
+    background behind pieces for easier viewing.\n\n1.5.7\n- Implemented weights
+    to the classic tiles. Things were thrown off so that the harder shapes were appearing
+    more often than they should. Weighting should balance it out.\n\n1.5.6.3\n- More
+    bug fixes. Issue with highscores when a name < 4. Issue where shape wasn't getting
+    cleared on a restart after a game over. Issue where the text below was covering
+    the home button.\n\n1.5.6.2\n- Bug fixes.\n- Some alignment changes.\n- Changed
+    highscore reset button so it's hopefully more clear on what happens.\n\n1.5.6.1\n-
+    Implemented sound! Game now has sound effects for when blocks are cleared, and
+    background music.\n- Implemented a settings page so that you can toggle music
+    and sound fx.\n- Added animations to blocks so they do a little spin as they're
+    removed.\n- The game will now check for open spots to place a block, and if it
+    doesn't find any it will show a 'Game Over' message.\n- Reset works a little
+    differently so that the music isn't interrupted. Be on the lookout for any issues
+    with this new implementation.\n\n1.5.5\n- Brought back online highscores. Highscores
+    now shows an option to see top global scores. Names (or initials) are truncated
+    to 4 characters and scanned for innapropriate names.\n- Added ability to clear
+    local highscores.\n- Added a Support the Developer page.\n- Blocks will now attempt
+    to align just above the touch spot for better view and so they aren't hidden
+    behind the finger, or unable to go to the side.\n\n1.5.4\n- Fixed issue with
+    blocks not aligning on certain displays.\n- Implemented a rotation feature in
+    Random mode, as well as in the new mode Twist.\n- Added a few new pieces to Classic
+    and Twist.\n\n1.5.3\n- Fixed views for different devices.\n- New background and
+    tile sprite for random mode.\n- Fixed multiplier timer.\n- Now shows your multiplier.\n\n1.5.2\n-
+    New Icon, new name (TetriBloDoku -> TetriDoku).\n- Made the game grid slightly
+    transparent.\n- First Publish Version!\n\n1.5.1\n- Redid highscore page in preparation
+    for publishing.\n- Added a multiplier factor based on speed of deleting blocks.\n\n1.5
+    \n- Implemented backgrounds, sprites, and other visuals to help improve the look
+    of the game. \n- Added a Patch Notes page for those interested in seeing what
+    changes have come about.\n- Increased the chance of a 1 block appearing in 'Random'
+    mode from 5% -> 10%, adjusted other blocks accordingly. Should see a greater
+    amount of 1/2/3 blocks appear than before."
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1839,8 +1862,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 38516894}
   m_HandleRect: {fileID: 38516893}
   m_Direction: 2
-  m_Value: 0
-  m_Size: 1
+  m_Value: 1
+  m_Size: 0.99997956
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:

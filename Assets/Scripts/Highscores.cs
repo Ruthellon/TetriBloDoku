@@ -11,12 +11,10 @@ using Assets.Scripts;
 public class Highscores : MonoBehaviour
 {
     public GameObject Names;
-    public GameObject Scores;
     public GameObject GameModeButton;
     public GameObject UserModeButton;
 
     TMPro.TextMeshProUGUI names;
-    TMPro.TextMeshProUGUI scores;
 
     private bool justMe = true;
     private GameModes gameMode = TBDGame.GameMode;
@@ -83,10 +81,8 @@ public class Highscores : MonoBehaviour
     void Start()
     {
         names = Names.GetComponent<TMPro.TextMeshProUGUI>();
-        scores = Scores.GetComponent<TMPro.TextMeshProUGUI>();
 
         names.text = string.Empty;
-        scores.text = string.Empty;
 
         if (gameMode == GameModes.Classic)
         {
@@ -114,17 +110,13 @@ public class Highscores : MonoBehaviour
 
             if (list != null)
             {
-                List<string> responseNames = list.highscores.Where(y => y.gameMode == (int)gameMode).Select(x => x.username).ToList();
+                List<string> responseNames = list.highscores.OrderByDescending(x => x.score).Where(x => x.score > 0).Select(x => x.username + " - " + x.score).ToList();
                 names.text = String.Join(Environment.NewLine, responseNames);
-
-                List<int> responseScores = list.highscores.Where(y => y.gameMode == (int)gameMode).Select(x => x.score).ToList();
-                scores.text = String.Join(Environment.NewLine, responseScores);
             }
         }
         else
         {
             names.text = "";
-            scores.text = "";
         }
     }
 
@@ -141,7 +133,7 @@ public class Highscores : MonoBehaviour
                 
                 if (response != null)
                 {
-                    List<HighScoreResponse> highscores = response.highscores.Where(x => x.gameMode == (int)gameMode).ToList();
+                    List<HighScoreResponse> highscores = response.highscores.Where(x => x.gameMode == (int)gameMode).OrderByDescending(x => x.score).ToList();
                     highscores.RemoveAll(x => 
                         x.username.ToLower() == "ass" ||
                         x.username.ToLower() == "cum" ||
@@ -163,11 +155,8 @@ public class Highscores : MonoBehaviour
                         x.username.ToLower() == "twat" ||
                         x.username.ToLower() == "tits");
 
-                    List<string> responseNames = highscores.Select(x => x.username.Substring(0,4)).ToList();
+                    List<string> responseNames = highscores.Select((x, i) => (i+1).ToString() + ". " + (x.username.Length > 4 ? x.username.Substring(0,4) : x.username) + " - " + x.score).ToList();
                     names.text = String.Join(Environment.NewLine, responseNames);
-
-                    List<int> responseScores = highscores.Select(x => x.score).ToList();
-                    scores.text = String.Join(Environment.NewLine, responseScores);
                 }
             }
         }

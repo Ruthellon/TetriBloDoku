@@ -30,6 +30,7 @@ namespace Assets.Scripts
                 return new List<Tuple<int, int>>();
         }
 
+        public int Frequency { get; set; }
         public int Quadrants { get; set; }
         public List<Tuple<int, int>> I { get; set; }
         public List<Tuple<int, int>> II { get; set; }
@@ -51,401 +52,384 @@ namespace Assets.Scripts
         //
         //////////////////////////
 
-        public static Dictionary<int, Shape> ShapesList = new Dictionary<int, Shape>()
+        public static List<Shape> ShapesList = new List<Shape>()
         {
-            { 0,
-                new Shape()
+            new Shape()
+            {
+                Frequency = 1,
+                Quadrants = 1,
+                I = new List<Tuple<int, int>>()
                 {
-                    Quadrants = 1,
-                    I = new List<Tuple<int, int>>()
-                    {
-                        new Tuple<int, int>(0,0)
-                    }
+                    new Tuple<int, int>(0,0)
                 }
             },
-            { 1, 
-                new Shape()
+            new Shape()
+            {
+                Frequency = 2,
+                Quadrants = 2,
+                I = new List<Tuple<int, int>>() // One block in middle, one above
                 {
-                    Quadrants = 2,
-                    I = new List<Tuple<int, int>>() // One block in middle, one above
-                    { 
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(0,-1)
-                    },
-                    II = new List<Tuple<int, int>>() // One block in middle, one left
-                    { 
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(-1,0) 
-                    }
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(0,-1)
+                },
+                II = new List<Tuple<int, int>>() // One block in middle, one left
+                {
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(-1,0)
                 }
             },
-            { 2,
-                new Shape()
+            new Shape()
+            {
+                Frequency = 2,
+                Quadrants = 2,
+                I = new List<Tuple<int, int>>() // One block in middle, one above, one below
                 {
-                    Quadrants = 2,
-                    I = new List<Tuple<int, int>>() // One block in middle, one above, one below
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(0,1),
-                        new Tuple<int, int>(0,-1)
-                    },
-                    II =  new List<Tuple<int, int>>() // One block in middle, one left, one right
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(1,0),
-                        new Tuple<int, int>(-1,0)
-                    }
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(0,1),
+                    new Tuple<int, int>(0,-1)
+                },
+                II =  new List<Tuple<int, int>>() // One block in middle, one left, one right
+                {
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(1,0),
+                    new Tuple<int, int>(-1,0)
                 }
             },
-            { 3, 
-                new Shape()
+            new Shape()
+            {
+                Frequency = 2,
+                Quadrants = 2,
+                I = new List<Tuple<int, int>>() // One block in middle, diagonal right
                 {
-                    Quadrants = 2,
-                    I = new List<Tuple<int, int>>() // One block in middle, diagonal right
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(1,-1)
-                    },
-                    II = new List<Tuple<int, int>>() // One block in middle, diagonal left
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(-1,-1)
-                    }
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(1,-1)
+                },
+                II = new List<Tuple<int, int>>() // One block in middle, diagonal left
+                {
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(-1,-1)
                 }
             },
-            { 4, 
-                new Shape()
+            new Shape()
+            {
+                Frequency = 2,
+                Quadrants = 2,
+                I = new List<Tuple<int, int>>() // One block in middle, bottom right, top left
                 {
-                    Quadrants = 2,
-                    I = new List<Tuple<int, int>>() // One block in middle, bottom right, top left
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(1,1),
-                        new Tuple<int, int>(-1,-1)
-                    },
-                    II = new List<Tuple<int, int>>() // One block in middle, bottom left, top right
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(-1,1),
-                        new Tuple<int, int>(1,-1)
-                    }
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(1,1),
+                    new Tuple<int, int>(-1,-1)
+                },
+                II = new List<Tuple<int, int>>() // One block in middle, bottom left, top right
+                {
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(-1,1),
+                    new Tuple<int, int>(1,-1)
                 }
             },
-            { 5, 
-                new Shape()
+            new Shape()
+            {
+                Frequency = 4,
+                Quadrants = 4,
+                I = new List<Tuple<int, int>>() // 3 block L bottom left
                 {
-                    Quadrants = 4,
-                    I = new List<Tuple<int, int>>() // 3 block L bottom left
-                    {
-                        new Tuple<int, int>(-1,0),
-                        new Tuple<int, int>(-1,1),
-                        new Tuple<int, int>(0,1)
-                    },
-                    II = new List<Tuple<int, int>>() // 3 block L top left
-                    {
-                        new Tuple<int, int>(-1,0),
-                        new Tuple<int, int>(-1,-1),
-                        new Tuple<int, int>(0,-1)
-                    },
-                    III = new List<Tuple<int, int>>() // 3 block L top right
-                    {
-                        new Tuple<int, int>(0,-1),
-                        new Tuple<int, int>(1,-1),
-                        new Tuple<int, int>(1,0)
-                    },
-                    IV = new List<Tuple<int, int>>() // 3 block L bottom right
-                    {
-                        new Tuple<int, int>(1,0),
-                        new Tuple<int, int>(1,1),
-                        new Tuple<int, int>(0,1)
-                    }
+                    new Tuple<int, int>(-1,0),
+                    new Tuple<int, int>(-1,1),
+                    new Tuple<int, int>(0,1)
+                },
+                II = new List<Tuple<int, int>>() // 3 block L top left
+                {
+                    new Tuple<int, int>(-1,0),
+                    new Tuple<int, int>(-1,-1),
+                    new Tuple<int, int>(0,-1)
+                },
+                III = new List<Tuple<int, int>>() // 3 block L top right
+                {
+                    new Tuple<int, int>(0,-1),
+                    new Tuple<int, int>(1,-1),
+                    new Tuple<int, int>(1,0)
+                },
+                IV = new List<Tuple<int, int>>() // 3 block L bottom right
+                {
+                    new Tuple<int, int>(1,0),
+                    new Tuple<int, int>(1,1),
+                    new Tuple<int, int>(0,1)
                 }
             },
-            { 6, 
-                new Shape()
+            new Shape()
+            {
+                Frequency = 1,
+                Quadrants = 1,
+                I = new List<Tuple<int, int>>() // 4 block square
                 {
-                    Quadrants = 1,
-                    I = new List<Tuple<int, int>>() // 4 block square
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(-1,0),
-                        new Tuple<int, int>(-1,1),
-                        new Tuple<int, int>(0,1)
-                    }
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(-1,0),
+                    new Tuple<int, int>(-1,1),
+                    new Tuple<int, int>(0,1)
                 }
             },
-            { 7, 
-                new Shape()
+            new Shape()
+            {
+                Frequency = 4,
+                Quadrants = 4,
+                I = new List<Tuple<int, int>>() // 4 block 3 blocks up/down, one block right
                 {
-                    Quadrants = 4,
-                    I = new List<Tuple<int, int>>() // 4 block 3 blocks up/down, one block right
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(0,-1),
-                        new Tuple<int, int>(0,1),
-                        new Tuple<int, int>(1,0)
-                    },
-                    II = new List<Tuple<int, int>>() // 4 block 3 blocks left/right, one block bottom
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(1,0),
-                        new Tuple<int, int>(-1,0),
-                        new Tuple<int, int>(0,1)
-                    },
-                    III = new List<Tuple<int, int>>() // 4 block 3 blocks up/down, one block left
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(0,-1),
-                        new Tuple<int, int>(0,1),
-                        new Tuple<int, int>(-1,0)
-                    },
-                    IV = new List<Tuple<int, int>>() // 4 block 3 blocks left/right, one block top
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(1,0),
-                        new Tuple<int, int>(-1,0),
-                        new Tuple<int, int>(0,-1)
-                    }
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(0,-1),
+                    new Tuple<int, int>(0,1),
+                    new Tuple<int, int>(1,0)
+                },
+                II = new List<Tuple<int, int>>() // 4 block 3 blocks left/right, one block bottom
+                {
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(1,0),
+                    new Tuple<int, int>(-1,0),
+                    new Tuple<int, int>(0,1)
+                },
+                III = new List<Tuple<int, int>>() // 4 block 3 blocks up/down, one block left
+                {
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(0,-1),
+                    new Tuple<int, int>(0,1),
+                    new Tuple<int, int>(-1,0)
+                },
+                IV = new List<Tuple<int, int>>() // 4 block 3 blocks left/right, one block top
+                {
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(1,0),
+                    new Tuple<int, int>(-1,0),
+                    new Tuple<int, int>(0,-1)
                 }
             },
-            { 8, 
-                new Shape()
+            new Shape()
+            {
+                Frequency = 2,
+                Quadrants = 2,
+                I = new List<Tuple<int, int>>() // 4 block S
                 {
-                    Quadrants = 2,
-                    I = new List<Tuple<int, int>>() // 4 block S
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(1,0),
-                        new Tuple<int, int>(0,1),
-                        new Tuple<int, int>(-1,1)
-                    },
-                    II = new List<Tuple<int, int>>() // 4 block S rotated
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(0,-1),
-                        new Tuple<int, int>(1,0),
-                        new Tuple<int, int>(1,1)
-                    }
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(1,0),
+                    new Tuple<int, int>(0,1),
+                    new Tuple<int, int>(-1,1)
+                },
+                II = new List<Tuple<int, int>>() // 4 block S rotated
+                {
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(0,-1),
+                    new Tuple<int, int>(1,0),
+                    new Tuple<int, int>(1,1)
                 }
             },
-            { 9, 
-                new Shape()
+            new Shape()
+            {
+                Frequency = 2,
+                Quadrants = 2,
+                I = new List<Tuple<int, int>>() // 4 block backwards s
                 {
-                    Quadrants = 2,
-                    I = new List<Tuple<int, int>>() // 4 block backwards s
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(-1,0),
-                        new Tuple<int, int>(0,1),
-                        new Tuple<int, int>(1,1)
-                    },
-                    II = new List<Tuple<int, int>>() // 4 block backwards S rotated
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(0,1),
-                        new Tuple<int, int>(1,0),
-                        new Tuple<int, int>(1,-1)
-                    }
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(-1,0),
+                    new Tuple<int, int>(0,1),
+                    new Tuple<int, int>(1,1)
+                },
+                II = new List<Tuple<int, int>>() // 4 block backwards S rotated
+                {
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(0,1),
+                    new Tuple<int, int>(1,0),
+                    new Tuple<int, int>(1,-1)
                 }
             },
-            { 10, 
-                new Shape()
+            new Shape()
+            {
+                Frequency = 4,
+                Quadrants = 4,
+                I = new List<Tuple<int, int>>() // 4 block L
                 {
-                    Quadrants = 4,
-                    I = new List<Tuple<int, int>>() // 4 block L
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(0,-1),
-                        new Tuple<int, int>(0,1),
-                        new Tuple<int, int>(1,1)
-                    },
-                    II = new List<Tuple<int, int>>() // 4 block L rotated 90
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(1,0),
-                        new Tuple<int, int>(-1,0),
-                        new Tuple<int, int>(-1,1)
-                    },
-                    III = new List<Tuple<int, int>>() // 4 block L rotated 180
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(0,-1),
-                        new Tuple<int, int>(0,1),
-                        new Tuple<int, int>(-1,-1)
-                    },
-                    IV = new List<Tuple<int, int>>() // 4 block L rotated 270
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(1,0),
-                        new Tuple<int, int>(-1,0),
-                        new Tuple<int, int>(1,-1)
-                    }
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(0,-1),
+                    new Tuple<int, int>(0,1),
+                    new Tuple<int, int>(1,1)
+                },
+                II = new List<Tuple<int, int>>() // 4 block L rotated 90
+                {
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(1,0),
+                    new Tuple<int, int>(-1,0),
+                    new Tuple<int, int>(-1,1)
+                },
+                III = new List<Tuple<int, int>>() // 4 block L rotated 180
+                {
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(0,-1),
+                    new Tuple<int, int>(0,1),
+                    new Tuple<int, int>(-1,-1)
+                },
+                IV = new List<Tuple<int, int>>() // 4 block L rotated 270
+                {
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(1,0),
+                    new Tuple<int, int>(-1,0),
+                    new Tuple<int, int>(1,-1)
                 }
             },
-            { 11, 
-                new Shape()
+            new Shape()
+            {
+                Frequency = 4,
+                Quadrants = 4,
+                I = new List<Tuple<int, int>>() // 4 block mirror L
                 {
-                    Quadrants = 4,
-                    I = new List<Tuple<int, int>>() // 4 block mirror L
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(0,-1),
-                        new Tuple<int, int>(0,1),
-                        new Tuple<int, int>(-1,1)
-                    },
-                    II = new List<Tuple<int, int>>() // 4 block mirror L rotated 90
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(1,0),
-                        new Tuple<int, int>(-1,0),
-                        new Tuple<int, int>(-1,-1)
-                    },
-                    III = new List<Tuple<int, int>>() // 4 block mirror L rotated 180
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(0,-1),
-                        new Tuple<int, int>(0,1),
-                        new Tuple<int, int>(1,-1)
-                    },
-                    IV = new List<Tuple<int, int>>() // 4 block mirror L rotated 270
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(1,0),
-                        new Tuple<int, int>(-1,0),
-                        new Tuple<int, int>(1,1)
-                    }
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(0,-1),
+                    new Tuple<int, int>(0,1),
+                    new Tuple<int, int>(-1,1)
+                },
+                II = new List<Tuple<int, int>>() // 4 block mirror L rotated 90
+                {
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(1,0),
+                    new Tuple<int, int>(-1,0),
+                    new Tuple<int, int>(-1,-1)
+                },
+                III = new List<Tuple<int, int>>() // 4 block mirror L rotated 180
+                {
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(0,-1),
+                    new Tuple<int, int>(0,1),
+                    new Tuple<int, int>(1,-1)
+                },
+                IV = new List<Tuple<int, int>>() // 4 block mirror L rotated 270
+                {
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(1,0),
+                    new Tuple<int, int>(-1,0),
+                    new Tuple<int, int>(1,1)
                 }
             },
-            { 12, 
-                new Shape()
+            new Shape()
+            {
+                Frequency = 2,
+                Quadrants = 2,
+                I = new List<Tuple<int, int>>() // 4 block line horizontal
                 {
-                    Quadrants = 2,
-                    I = new List<Tuple<int, int>>() // 4 block line horizontal
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(1,0),
-                        new Tuple<int, int>(2,0),
-                        new Tuple<int, int>(-1,0)
-                    },
-                    II = new List<Tuple<int, int>>() // 4 block line vertical
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(0,-1),
-                        new Tuple<int, int>(0,-2),
-                        new Tuple<int, int>(0,1)
-                    }
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(1,0),
+                    new Tuple<int, int>(2,0),
+                    new Tuple<int, int>(-1,0)
+                },
+                II = new List<Tuple<int, int>>() // 4 block line vertical
+                {
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(0,-1),
+                    new Tuple<int, int>(0,-2),
+                    new Tuple<int, int>(0,1)
                 }
             },
-            { 13,
-                new Shape()
+            new Shape()
+            {
+                Frequency = 2,
+                Quadrants = 2,
+                I = new List<Tuple<int, int>>() // 5 block line horizontal
                 {
-                    Quadrants = 2,
-                    I = new List<Tuple<int, int>>() // 5 block line horizontal
-                    { 
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(1,0),
-                        new Tuple<int, int>(2,0),
-                        new Tuple<int, int>(-1,0),
-                        new Tuple<int, int>(-2,0) 
-                    },
-                    II = new List<Tuple<int, int>>() // 5 block line vertical
-                    { 
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(0,-1),
-                        new Tuple<int, int>(0,-2),
-                        new Tuple<int, int>(0,1),
-                        new Tuple<int, int>(0,2) 
-                    }
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(1,0),
+                    new Tuple<int, int>(2,0),
+                    new Tuple<int, int>(-1,0),
+                    new Tuple<int, int>(-2,0)
+                },
+                II = new List<Tuple<int, int>>() // 5 block line vertical
+                {
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(0,-1),
+                    new Tuple<int, int>(0,-2),
+                    new Tuple<int, int>(0,1),
+                    new Tuple<int, int>(0,2)
                 }
             },
-            { 14, 
-                new Shape()
+            new Shape()
+            {
+                Frequency = 4,
+                Quadrants = 4,
+                I = new List<Tuple<int, int>>() // 5 block T
                 {
-                    Quadrants = 4,
-                    I = new List<Tuple<int, int>>() // 5 block T
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(0,-1),
-                        new Tuple<int, int>(-1,-1),
-                        new Tuple<int, int>(1,-1),
-                        new Tuple<int, int>(0,1)
-                    },
-                    II = new List<Tuple<int, int>>() // 5 block T facing right
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(-1,0),
-                        new Tuple<int, int>(1,0),
-                        new Tuple<int, int>(1,1),
-                        new Tuple<int, int>(1,-1)
-                    },
-                    III = new List<Tuple<int, int>>() // 5 block T upside down
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(0,1),
-                        new Tuple<int, int>(-1,1),
-                        new Tuple<int, int>(1,1),
-                        new Tuple<int, int>(0,-1)
-                    },
-                    IV = new List<Tuple<int, int>>() // 5 block T facing Left
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(-1,0),
-                        new Tuple<int, int>(1,0),
-                        new Tuple<int, int>(-1,1),
-                        new Tuple<int, int>(-1,-1)
-                    }
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(0,-1),
+                    new Tuple<int, int>(-1,-1),
+                    new Tuple<int, int>(1,-1),
+                    new Tuple<int, int>(0,1)
+                },
+                II = new List<Tuple<int, int>>() // 5 block T facing right
+                {
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(-1,0),
+                    new Tuple<int, int>(1,0),
+                    new Tuple<int, int>(1,1),
+                    new Tuple<int, int>(1,-1)
+                },
+                III = new List<Tuple<int, int>>() // 5 block T upside down
+                {
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(0,1),
+                    new Tuple<int, int>(-1,1),
+                    new Tuple<int, int>(1,1),
+                    new Tuple<int, int>(0,-1)
+                },
+                IV = new List<Tuple<int, int>>() // 5 block T facing Left
+                {
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(-1,0),
+                    new Tuple<int, int>(1,0),
+                    new Tuple<int, int>(-1,1),
+                    new Tuple<int, int>(-1,-1)
                 }
             },
-            { 15, 
-                new Shape()
+            new Shape()
+            {
+                Frequency = 4,
+                Quadrants = 4,
+                I = new List<Tuple<int, int>>() // 5 block U
                 {
-                    Quadrants = 4,
-                    I = new List<Tuple<int, int>>() // 5 block U
-                    {
-                        new Tuple<int, int>(-1,0),
-                        new Tuple<int, int>(1,0),
-                        new Tuple<int, int>(-1,1),
-                        new Tuple<int, int>(0,1),
-                        new Tuple<int, int>(1,1)
-                    },
-                    II = new List<Tuple<int, int>>() // 5 block U facing right
-                    {
-                        new Tuple<int, int>(0,-1),
-                        new Tuple<int, int>(-1,-1),
-                        new Tuple<int, int>(-1,0),
-                        new Tuple<int, int>(-1,1),
-                        new Tuple<int, int>(0,1)
-                    },
-                    III = new List<Tuple<int, int>>() // 5 block U upsideown
-                    {
-                        new Tuple<int, int>(-1,0),
-                        new Tuple<int, int>(1,0),
-                        new Tuple<int, int>(-1,-1),
-                        new Tuple<int, int>(0,-1),
-                        new Tuple<int, int>(1,-1)
-                    },
-                    IV = new List<Tuple<int, int>>() // 5 block U facing left
-                    {
-                        new Tuple<int, int>(0,-1),
-                        new Tuple<int, int>(1,-1),
-                        new Tuple<int, int>(1,0),
-                        new Tuple<int, int>(1,1),
-                        new Tuple<int, int>(0,1)
-                    }
+                    new Tuple<int, int>(-1,0),
+                    new Tuple<int, int>(1,0),
+                    new Tuple<int, int>(-1,1),
+                    new Tuple<int, int>(0,1),
+                    new Tuple<int, int>(1,1)
+                },
+                II = new List<Tuple<int, int>>() // 5 block U facing right
+                {
+                    new Tuple<int, int>(0,-1),
+                    new Tuple<int, int>(-1,-1),
+                    new Tuple<int, int>(-1,0),
+                    new Tuple<int, int>(-1,1),
+                    new Tuple<int, int>(0,1)
+                },
+                III = new List<Tuple<int, int>>() // 5 block U upsideown
+                {
+                    new Tuple<int, int>(-1,0),
+                    new Tuple<int, int>(1,0),
+                    new Tuple<int, int>(-1,-1),
+                    new Tuple<int, int>(0,-1),
+                    new Tuple<int, int>(1,-1)
+                },
+                IV = new List<Tuple<int, int>>() // 5 block U facing left
+                {
+                    new Tuple<int, int>(0,-1),
+                    new Tuple<int, int>(1,-1),
+                    new Tuple<int, int>(1,0),
+                    new Tuple<int, int>(1,1),
+                    new Tuple<int, int>(0,1)
                 }
             },
-            { 16, 
-                new Shape()
+            new Shape()
+            {
+                Frequency = 1,
+                Quadrants = 1,
+                I = new List<Tuple<int, int>>() // 5 block +
                 {
-                    Quadrants = 1,
-                    I = new List<Tuple<int, int>>() // 5 block +
-                    {
-                        new Tuple<int, int>(0,0),
-                        new Tuple<int, int>(1,0),
-                        new Tuple<int, int>(-1,0),
-                        new Tuple<int, int>(0,-1),
-                        new Tuple<int, int>(0,1)
-                    }
+                    new Tuple<int, int>(0,0),
+                    new Tuple<int, int>(1,0),
+                    new Tuple<int, int>(-1,0),
+                    new Tuple<int, int>(0,-1),
+                    new Tuple<int, int>(0,1)
                 }
             }
         };

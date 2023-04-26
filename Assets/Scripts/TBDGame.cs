@@ -14,6 +14,9 @@ public class TBDGame : MonoBehaviour
     public static string Username;
     public static string UserID;
     public static GameModes GameMode = GameModes.Classic;
+    public static bool MusicOn = true;
+    public static bool SoundFXOn = true;
+    public static bool VisualAidOn = false;
 
     public GameObject Canvas;
     public GameObject Background;
@@ -29,6 +32,12 @@ public class TBDGame : MonoBehaviour
     public GameObject MultiplierText;
     public GameObject GridTopLeft;
     public GameObject GridBottomRight;
+    public GameObject GameOver;
+    public GameObject VisualAid;
+    public AudioSource BlockPop;
+    public AudioSource BackgroundMusic;
+    public AudioSource BlockRotate;
+    public AudioSource BlockPlace;
 
     public Sprite Background1;
     public Sprite Background2;
@@ -58,35 +67,36 @@ public class TBDGame : MonoBehaviour
             list.highscores = new Highscores.HighScoreResponse[15];
 
         int lowestScoreIndex = 0;
-        int lowestScore = -1;
+        int lowestScore = int.MaxValue;
         for (int i = 0; i < list.highscores.Length; i++)
         {
             if (list.highscores[i] == null)
                 list.highscores[i] = new Highscores.HighScoreResponse();
 
-            if (Score > list.highscores[i].score)
+            if (list.highscores[i].score < lowestScore)
             {
-                if (list.highscores[i].score > lowestScore)
-                {
-                    lowestScoreIndex = i;
-                    lowestScore = list.highscores[i].score;
-                }
+                lowestScoreIndex = i;
+                lowestScore = list.highscores[i].score;
             }
         }
 
-        list.highscores[lowestScoreIndex] = new Highscores.HighScoreResponse()
+        if (Score > lowestScore)
         {
-            username = Username,
-            score = Score,
-            dateAchieved = DateTime.Now,
-            gameMode = (int)GameMode
-        };
+            list.highscores[lowestScoreIndex] = new Highscores.HighScoreResponse()
+            {
+                username = Username,
+                score = Score,
+                dateAchieved = DateTime.Now,
+                gameMode = (int)GameMode
+            };
+        }
 
         PlayerPrefs.SetString("Highscores" + GameMode.ToString(), JsonUtility.ToJson(list));
 
         if (PlayerPrefs.HasKey("BoardState" + GameMode.ToString()))
         {
             PlayerPrefs.SetString("BoardState" + GameMode.ToString(), "");
+            PlayerPrefs.DeleteKey("Score" + GameMode.ToString());
             PlayerPrefs.DeleteKey("Shape1" + GameMode.ToString());
             PlayerPrefs.DeleteKey("Shape2" + GameMode.ToString());
             PlayerPrefs.DeleteKey("Shape3" + GameMode.ToString());
@@ -94,12 +104,21 @@ public class TBDGame : MonoBehaviour
 
         StartCoroutine(PostRequest("http://api.angryelfgames.com/AngryElf/InputHighScore", Score));
 
-        SceneManager.LoadScene("TBDGame");
+        Score = 0;
+        multiplier = 0;
+
+        Startup();
+        //SceneManager.LoadScene("TBDGame");
     }
 
     public void HighScores()
     {
         SceneManager.LoadScene("HighScores");
+    }
+
+    public void Settings()
+    {
+        SceneManager.LoadScene("Settings");
     }
 
     public void Home()
@@ -116,7 +135,6 @@ public class TBDGame : MonoBehaviour
             Background.GetComponent<UnityEngine.UI.Image>().sprite = Background2;
         else if (GameMode == GameModes.Twist)
             Background.GetComponent<UnityEngine.UI.Image>().sprite = Background3;
-
 
         float gridWidth = GridBottomRight.transform.position.x - GridTopLeft.transform.position.x;
         float gridHeight = GridTopLeft.transform.position.y - GridBottomRight.transform.position.y;
@@ -135,7 +153,82 @@ public class TBDGame : MonoBehaviour
             }
             positionY -= tileHeight;
         }
-        
+
+        Score = PlayerPrefs.GetInt("Score" + GameMode.ToString(), 0);
+
+        Startup();
+
+        GetBoardState();
+
+        if (MusicOn)
+        {
+            BackgroundMusic.enabled = true;
+            BackgroundMusic.Play();
+        }
+        else
+        {
+            BackgroundMusic.Pause();
+            BackgroundMusic.enabled = false;
+        }
+
+        VisualAid.SetActive(VisualAidOn);
+
+        //CheckBoard();
+    }
+
+    public void Startup()
+    {
+        if (CurrentTiles != null)
+        {
+            for (int y = 0; y < 9; y++)
+            {
+                for (int x = 0; x < 9; x++)
+                {
+                    if (CurrentTiles[x, y] != null)
+                    {
+                        CurrentTiles[x, y].GetComponent<Animator>().Play("Destroy");
+                        CurrentTiles[x, y] = null;
+                    }
+                }
+            }
+        }
+
+        if (shape1 != null)
+        {
+            shape1.Parent.SetActive(true);
+            for (int i = 0; i < shape1.Parent.transform.childCount; i++)
+            {
+                shape1.Parent.transform.GetChild(i).gameObject.GetComponent<Animator>().Play("Destroy");
+            }
+            shape1.Parent.transform.DetachChildren();
+            Destroy(shape1.Parent);
+            shape1 = null;
+        }
+        if (shape2 != null)
+        {
+            shape2.Parent.SetActive(true);
+            for (int i = 0; i < shape2.Parent.transform.childCount; i++)
+            {
+                shape2.Parent.transform.GetChild(i).gameObject.GetComponent<Animator>().Play("Destroy");
+            }
+            shape2.Parent.transform.DetachChildren();
+            Destroy(shape2.Parent);
+            shape2 = null;
+        }
+        if (shape3 != null)
+        {
+            shape3.Parent.SetActive(true);
+            for (int i = 0; i < shape3.Parent.transform.childCount; i++)
+            {
+                shape3.Parent.transform.GetChild(i).gameObject.GetComponent<Animator>().Play("Destroy");
+            }
+            shape3.Parent.transform.DetachChildren();
+            Destroy(shape3.Parent);
+            shape3 = null;
+        }
+
+        GameOver.SetActive(false);
+
         if (PlayerPrefs.HasKey("Shape1" + GameMode.ToString()))
         {
             string savedShape = PlayerPrefs.GetString("Shape1" + GameMode.ToString());
@@ -150,11 +243,13 @@ public class TBDGame : MonoBehaviour
                     if (PlayerPrefs.HasKey("Shape1Quadrant" + GameMode.ToString()))
                         shape1.ShapeQuadrant = PlayerPrefs.GetInt("Shape1Quadrant" + GameMode.ToString());
                     shape1.ChosenShape = Convert.ToInt32(savedShape);
+                    shape1.Shape = Shapes.ShapesList[shape1.ChosenShape];
                     shape1.CreateChildrenFromShape(Tile, TileSpawnPoint1.transform.position, tileWidth, tileHeight);
                 }
                 else if (GameMode == GameModes.Twist)
                 {
                     shape1.ChosenShape = Convert.ToInt32(savedShape);
+                    shape1.Shape = Shapes.ShapesList[shape1.ChosenShape];
                     shape1.CreateChildrenFromShape(Tile, TileSpawnPoint1.transform.position, tileWidth, tileHeight);
                 }
                 else if (GameMode == GameModes.Random)
@@ -189,11 +284,13 @@ public class TBDGame : MonoBehaviour
                     if (PlayerPrefs.HasKey("Shape2Quadrant" + GameMode.ToString()))
                         shape2.ShapeQuadrant = PlayerPrefs.GetInt("Shape2Quadrant" + GameMode.ToString());
                     shape2.ChosenShape = Convert.ToInt32(savedShape);
+                    shape2.Shape = Shapes.ShapesList[shape2.ChosenShape];
                     shape2.CreateChildrenFromShape(Tile, TileSpawnPoint2.transform.position, tileWidth, tileHeight);
                 }
                 else if (GameMode == GameModes.Twist)
                 {
                     shape2.ChosenShape = Convert.ToInt32(savedShape);
+                    shape2.Shape = Shapes.ShapesList[shape2.ChosenShape];
                     shape2.CreateChildrenFromShape(Tile, TileSpawnPoint2.transform.position, tileWidth, tileHeight);
                 }
                 else if (GameMode == GameModes.Random)
@@ -228,11 +325,13 @@ public class TBDGame : MonoBehaviour
                     if (PlayerPrefs.HasKey("Shape3Quadrant" + GameMode.ToString()))
                         shape3.ShapeQuadrant = PlayerPrefs.GetInt("Shape3Quadrant" + GameMode.ToString());
                     shape3.ChosenShape = Convert.ToInt32(savedShape);
+                    shape3.Shape = Shapes.ShapesList[shape3.ChosenShape];
                     shape3.CreateChildrenFromShape(Tile, TileSpawnPoint3.transform.position, tileWidth, tileHeight);
                 }
                 else if (GameMode == GameModes.Twist)
                 {
                     shape3.ChosenShape = Convert.ToInt32(savedShape);
+                    shape3.Shape = Shapes.ShapesList[shape3.ChosenShape];
                     shape3.CreateChildrenFromShape(Tile, TileSpawnPoint3.transform.position, tileWidth, tileHeight);
                 }
                 else if (GameMode == GameModes.Random)
@@ -253,10 +352,8 @@ public class TBDGame : MonoBehaviour
             shape3 = InstantiateShape(TileSpawnPoint3.transform.position);
         }
 
-        GetBoardState();
-
         ScoreText.GetComponent<TMPro.TextMeshProUGUI>().text = $"Score: {Score}";
-        MultiplierText.GetComponent<TMPro.TextMeshProUGUI>().text = $"x{multiplier+1}";
+        MultiplierText.GetComponent<TMPro.TextMeshProUGUI>().text = $"x{multiplier + 1}";
     }
 
     int multiplier = 0;
@@ -279,9 +376,14 @@ public class TBDGame : MonoBehaviour
             MultiplierText.GetComponent<TMPro.TextMeshProUGUI>().text = $"x{multiplier + 1}";
         }
 
-        if (Input.touchCount > 0)
+        if (Input.touchCount > 0 || Input.GetMouseButton(0))
         {
-            Vector3 mousePositionOrig = Camera.main.ScreenToWorldPoint(Input.GetTouch(0).position);
+            Vector3 mousePositionOrig;
+
+            if (Input.touchCount > 0)
+                mousePositionOrig = Camera.main.ScreenToWorldPoint(Input.GetTouch(0).position);
+            else
+                mousePositionOrig = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 
             if (draggedObject == null)
             {
@@ -319,7 +421,7 @@ public class TBDGame : MonoBehaviour
             
             if (draggedObject != null)
             {
-                if (Input.GetTouch(0).phase == TouchPhase.Ended)
+                if ((Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Ended))
                 {
                     if ((Vector2)mousePositionOrig == (Vector2)mouseStartPosition)
                     {
@@ -340,6 +442,9 @@ public class TBDGame : MonoBehaviour
         {
             if (draggedObject != null)
             {
+                if ((Vector2)Camera.main.ScreenToWorldPoint(Input.mousePosition) == (Vector2)mouseStartPosition)
+                    rotateShape = true;
+
                 if (!rotateShape)
                 {
                     bool allChildrenOnGrid = true;
@@ -400,6 +505,9 @@ public class TBDGame : MonoBehaviour
                             CurrentTiles[nearX, nearY] = draggedObject.Parent.transform.GetChild(i).gameObject;
                         }
 
+                        if (SoundFXOn)
+                            BlockPlace.Play();
+
                         draggedObject.Parent.transform.DetachChildren();
 
                         if (draggedObject == shape1)
@@ -427,6 +535,7 @@ public class TBDGame : MonoBehaviour
 
                         CleanupBoard();
                         SaveBoardState();
+                        CheckBoard();
                     }
                     else
                     {
@@ -502,7 +611,7 @@ public class TBDGame : MonoBehaviour
         }
         else if (GameMode == GameModes.Classic || GameMode == GameModes.Twist)
         {
-            int shape = UnityEngine.Random.Range(0, Shapes.ShapesList.Count);
+            int shape = UnityEngine.Random.Range(0, Shapes.ShapesList.Sum(x => x.Frequency));
 
             ParentTile parent = new ParentTile();
             parent.Parent = Instantiate(new GameObject(), new Vector3(position.x, position.y), Quaternion.identity);
@@ -522,41 +631,13 @@ public class TBDGame : MonoBehaviour
 
     void RotateShape()
     {
-        if (GameMode == GameModes.Random)
+        if (GameMode != GameModes.Classic)
         {
-            if (draggedObject.ChosenChildren.Count > 1)
-            {
-                var oldList = draggedObject.ChosenChildren;
-                List<int> newList = new List<int>();
-
-                foreach (var square in oldList)
-                {
-                    if (square <= 5)
-                        newList.Add(square + 2);
-                    else if (square == 6)
-                        newList.Add(0);
-                    else if (square == 7)
-                        newList.Add(1);
-                    else if (square == 8)
-                        newList.Add(8);
-                }
-
-                for (int i = 0; i < draggedObject.Parent.transform.childCount; i++)
-                {
-                    Destroy(draggedObject.Parent.transform.GetChild(i).gameObject);
-                }
-
-                draggedObject.ChosenChildren = newList;
-                draggedObject.CreateChildrenFromList(Tile2, originalPosition, tileWidth, tileHeight);
-            }
-        }
-        else if (GameMode == GameModes.Twist)
-        {
-            if (Shapes.ShapesList[draggedObject.ChosenShape].Quadrants > 1)
+            if (draggedObject.Shape.Quadrants > 1)
             {
                 draggedObject.ShapeQuadrant++;
 
-                if (draggedObject.ShapeQuadrant >= Shapes.ShapesList[draggedObject.ChosenShape].Quadrants)
+                if (draggedObject.ShapeQuadrant >= draggedObject.Shape.Quadrants)
                     draggedObject.ShapeQuadrant = 0;
 
                 for (int i = 0; i < draggedObject.Parent.transform.childCount; i++)
@@ -564,7 +645,13 @@ public class TBDGame : MonoBehaviour
                     Destroy(draggedObject.Parent.transform.GetChild(i).gameObject);
                 }
 
-                draggedObject.CreateChildrenFromShape(Tile, originalPosition, tileWidth, tileHeight);
+                if (GameMode == GameModes.Twist)
+                    draggedObject.CreateChildrenFromShape(Tile, originalPosition, tileWidth, tileHeight);
+                else if (GameMode == GameModes.Random)
+                    draggedObject.CreateChildrenFromShape(Tile2, originalPosition, tileWidth, tileHeight);
+
+                if (SoundFXOn)
+                    BlockRotate.Play();
             }
         }
     }
@@ -664,7 +751,8 @@ public class TBDGame : MonoBehaviour
 
         if (listDestroyed.Any())
         {
-            Explosion.Play();
+            if (SoundFXOn)
+                BlockPop.Play();
 
             Score += (listDestroyed.Count * multiplier);
             timeForMultiplier = 5f;
@@ -673,7 +761,7 @@ public class TBDGame : MonoBehaviour
 
         foreach (var go in listDestroyed)
         {
-            Destroy(go);
+            go.GetComponent<Animator>().Play("Destroy");
         }
 
         foreach (var v in listDestroyedGrid)
@@ -684,11 +772,208 @@ public class TBDGame : MonoBehaviour
         MultiplierText.GetComponent<TMPro.TextMeshProUGUI>().text = $"x{multiplier + 1}";
     }
 
+    void CheckBoard()
+    {
+        if (GameMode == GameModes.Classic)
+        {
+            bool spotFound = false;
+
+            for (int y = 0; y < 9; y++)
+            {
+                for (int x = 0; x < 9; x++)
+                {
+                    bool shapeClear = false;
+                    if (shape1 != null)
+                    {
+                        shapeClear = true;
+                        foreach (var position in Shapes.ShapesList[shape1.ChosenShape].GetQuadrant(shape1.ShapeQuadrant))
+                        {
+                            if (x + position.Item1 < 0 || x + position.Item1 > 8 ||
+                                y - position.Item2 < 0 || y - position.Item2 > 8 ||
+                                CurrentTiles[x + position.Item1, y - position.Item2] != null)
+                            {
+                                shapeClear = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (shapeClear)
+                    {
+                        spotFound = true;
+                        break;
+                    }
+
+                    if (shape2 != null)
+                    {
+                        shapeClear = true;
+                        foreach (var position in Shapes.ShapesList[shape2.ChosenShape].GetQuadrant(shape2.ShapeQuadrant))
+                        {
+                            if (x + position.Item1 < 0 || x + position.Item1 > 8 ||
+                                y - position.Item2 < 0 || y - position.Item2 > 8 ||
+                                CurrentTiles[x + position.Item1, y - position.Item2] != null)
+                            {
+                                shapeClear = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (shapeClear)
+                    {
+                        spotFound = true;
+                        break;
+                    }
+
+                    if (shape3 != null)
+                    {
+                        shapeClear = true;
+                        foreach (var position in Shapes.ShapesList[shape3.ChosenShape].GetQuadrant(shape3.ShapeQuadrant))
+                        {
+                            if (x + position.Item1 < 0 || x + position.Item1 > 8 ||
+                                y - position.Item2 < 0 || y - position.Item2 > 8 ||
+                                CurrentTiles[x + position.Item1, y - position.Item2] != null)
+                            {
+                                shapeClear = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (shapeClear)
+                    {
+                        spotFound = true;
+                        break;
+                    }
+                }
+                if (spotFound)
+                    break;
+            }
+
+            if (!spotFound)
+            {
+                if (shape1 != null)
+                    shape1.Parent.SetActive(false);
+                if (shape2 != null)
+                    shape2.Parent.SetActive(false);
+                if (shape3 != null)
+                    shape3.Parent.SetActive(false);
+
+                GameOver.SetActive(true);
+            }
+        }
+        else if (GameMode == GameModes.Twist || GameMode == GameModes.Random)
+        {
+            bool spotFound = false;
+
+            for (int y = 0; y < 9; y++)
+            {
+                for (int x = 0; x < 9; x++)
+                {
+                    bool shapeClear = false;
+                    if (shape1 != null)
+                    {
+                        for (int i = 0; i < shape1.Shape.Quadrants; i++)
+                        {
+                            shapeClear = true;
+                            foreach (var position in shape1.Shape.GetQuadrant(i))
+                            {
+                                if (x + position.Item1 < 0 || x + position.Item1 > 8 ||
+                                    y - position.Item2 < 0 || y - position.Item2 > 8 ||
+                                    CurrentTiles[x + position.Item1, y - position.Item2] != null)
+                                {
+                                    shapeClear = false;
+                                    break;
+                                }
+                            }
+
+                            if (shapeClear)
+                                break;
+                        }
+                    }
+
+                    if (shapeClear)
+                    {
+                        spotFound = true;
+                        break;
+                    }
+
+                    if (shape2 != null)
+                    {
+                        for (int i = 0; i < shape2.Shape.Quadrants; i++)
+                        {
+                            shapeClear = true;
+                            foreach (var position in shape2.Shape.GetQuadrant(i))
+                            {
+                                if (x + position.Item1 < 0 || x + position.Item1 > 8 ||
+                                    y - position.Item2 < 0 || y - position.Item2 > 8 ||
+                                    CurrentTiles[x + position.Item1, y - position.Item2] != null)
+                                {
+                                    shapeClear = false;
+                                    break;
+                                }
+                            }
+
+                            if (shapeClear)
+                                break;
+                        }
+                    }
+
+                    if (shapeClear)
+                    {
+                        spotFound = true;
+                        break;
+                    }
+
+                    if (shape3 != null)
+                    {
+                        for (int i = 0; i < shape3.Shape.Quadrants; i++)
+                        {
+                            shapeClear = true;
+                            foreach (var position in shape3.Shape.GetQuadrant(i))
+                            {
+                                if (x + position.Item1 < 0 || x + position.Item1 > 8 ||
+                                    y - position.Item2 < 0 || y - position.Item2 > 8 ||
+                                    CurrentTiles[x + position.Item1, y - position.Item2] != null)
+                                {
+                                    shapeClear = false;
+                                    break;
+                                }
+                            }
+
+                            if (shapeClear)
+                                break;
+                        }
+                    }
+
+                    if (shapeClear)
+                    {
+                        spotFound = true;
+                        break;
+                    }
+                }
+                if (spotFound)
+                    break;
+            }
+
+            if (!spotFound)
+            {
+                if (shape1 != null)
+                    shape1.Parent.SetActive(false);
+                if (shape2 != null)
+                    shape2.Parent.SetActive(false);
+                if (shape3 != null)
+                    shape3.Parent.SetActive(false);
+
+                GameOver.SetActive(true);
+            }
+        }
+    }
+
     void GetBoardState()
     {
         if (PlayerPrefs.HasKey("BoardState" + GameMode.ToString()) && !string.IsNullOrEmpty(PlayerPrefs.GetString("BoardState" + GameMode.ToString())))
         {
-            Score = PlayerPrefs.GetInt("Score" + GameMode.ToString(), 0);
             SaveObject save = JsonUtility.FromJson<SaveObject>(PlayerPrefs.GetString("BoardState" + GameMode.ToString()));
 
             for (int i = 0; i < save.currentTiles.Length; i++)
@@ -790,44 +1075,90 @@ public class TBDGame : MonoBehaviour
         public float RelativeX { get; set; } = 0;
         public float RelativeY { get; set; } = 0;
         public List<int> ChosenChildren { get; set; }
+        public Shape Shape { get; set; } = null;
 
         public void CreateChildrenFromList(GameObject Tile, Vector3 position, float tileWidth, float tileHeight)
         {
+            Shape = new Shape();
+            Shape.Quadrants = 4;
+            Shape.I = new List<Tuple<int, int>>();
+            Shape.II = new List<Tuple<int, int>>();
+            Shape.III = new List<Tuple<int, int>>();
+            Shape.IV = new List<Tuple<int, int>>();
             foreach (var child in ChosenChildren)
             {
                 if (child == 0)
+                {
+                    Shape.I.Add(new Tuple<int, int>(-1, 1));
+                    Shape.II.Add(new Tuple<int, int>(-1, -1));
+                    Shape.III.Add(new Tuple<int, int>(1, -1));
+                    Shape.IV.Add(new Tuple<int, int>(1, 1));
                     Instantiate(Tile, new Vector3(position.x - tileWidth, position.y + tileHeight, 0), Quaternion.identity, Parent.transform); // Bottom Left
+                }
                 else if (child == 1)
+                {
+                    Shape.I.Add(new Tuple<int, int>(-1, 0));
+                    Shape.II.Add(new Tuple<int, int>(0, -1));
+                    Shape.III.Add(new Tuple<int, int>(1, 0));
+                    Shape.IV.Add(new Tuple<int, int>(0, 1));
                     Instantiate(Tile, new Vector3(position.x - tileWidth, position.y, 0), Quaternion.identity, Parent.transform); // Left 1
+                }
                 else if (child == 2)
+                {
+                    Shape.I.Add(new Tuple<int, int>(-1, -1));
+                    Shape.II.Add(new Tuple<int, int>(1, -1));
+                    Shape.III.Add(new Tuple<int, int>(1, 1));
+                    Shape.IV.Add(new Tuple<int, int>(-1, 1));
                     Instantiate(Tile, new Vector3(position.x - tileWidth, position.y - tileHeight, 0), Quaternion.identity, Parent.transform);  // Top Left
+                }
                 else if (child == 3)
+                {
+                    Shape.I.Add(new Tuple<int, int>(0, -1));
+                    Shape.II.Add(new Tuple<int, int>(1, 0));
+                    Shape.III.Add(new Tuple<int, int>(0, 1));
+                    Shape.IV.Add(new Tuple<int, int>(-1, 0));
                     Instantiate(Tile, new Vector3(position.x, position.y - tileHeight, 0), Quaternion.identity, Parent.transform); // Up 1
+                }
                 else if (child == 4)
+                {
+                    Shape.I.Add(new Tuple<int, int>(1, -1));
+                    Shape.II.Add(new Tuple<int, int>(1, 1));
+                    Shape.III.Add(new Tuple<int, int>(-1, 1));
+                    Shape.IV.Add(new Tuple<int, int>(-1, -1));
                     Instantiate(Tile, new Vector3(position.x + tileWidth, position.y - tileHeight, 0), Quaternion.identity, Parent.transform); // Top Right
+                }
                 else if (child == 5)
+                {
+                    Shape.I.Add(new Tuple<int, int>(1, 0));
+                    Shape.II.Add(new Tuple<int, int>(0, 1));
+                    Shape.III.Add(new Tuple<int, int>(-1, 0));
+                    Shape.IV.Add(new Tuple<int, int>(0, -1));
                     Instantiate(Tile, new Vector3(position.x + tileWidth, position.y, 0), Quaternion.identity, Parent.transform); // Right 1
+                }
                 else if (child == 6)
+                {
+                    Shape.I.Add(new Tuple<int, int>(1, 1));
+                    Shape.II.Add(new Tuple<int, int>(-1, 1));
+                    Shape.III.Add(new Tuple<int, int>(-1, -1));
+                    Shape.IV.Add(new Tuple<int, int>(1, -1));
                     Instantiate(Tile, new Vector3(position.x + tileWidth, position.y + tileHeight, 0), Quaternion.identity, Parent.transform); // Bottom Right
+                }
                 else if (child == 7)
+                {
+                    Shape.I.Add(new Tuple<int, int>(0, 1));
+                    Shape.II.Add(new Tuple<int, int>(-1, 0));
+                    Shape.III.Add(new Tuple<int, int>(0, -1));
+                    Shape.IV.Add(new Tuple<int, int>(1, 0));
                     Instantiate(Tile, new Vector3(position.x, position.y + tileHeight, 0), Quaternion.identity, Parent.transform); // Bottom 1
+                }
                 else if (child == 8)
+                {
+                    Shape.I.Add(new Tuple<int, int>(0, 0));
+                    Shape.II.Add(new Tuple<int, int>(0, 0));
+                    Shape.III.Add(new Tuple<int, int>(0, 0));
+                    Shape.IV.Add(new Tuple<int, int>(0, 0));
                     Instantiate(Tile, new Vector3(position.x, position.y, 0), Quaternion.identity, Parent.transform); // center
-                /*else if (child == 9)
-                    Instantiate(Tile, new Vector3(position.x, position.y + (tileHeight * 2)), Quaternion.identity, parent.Parent.transform); // Bottom 2
-                else if (child == 10)
-                    Instantiate(Tile, new Vector3(position.x + tileWidth, position.y + (tileHeight * 2)), Quaternion.identity, parent.Parent.transform); // Bottom 2 Right 1
-                else if (child == 11)
-                    Instantiate(Tile, new Vector3(position.x + (tileWidth * 2), position.y + (tileHeight * 2)), Quaternion.identity, parent.Parent.transform); // Bottom Right Corner
-                else if (child == 12)
-                    Instantiate(Tile, new Vector3(position.x + (tileWidth * 2), position.y + tileHeight), Quaternion.identity, parent.Parent.transform); // Right 2 down 1
-                else if (child == 13)
-                    Instantiate(Tile, new Vector3(position.x + (tileWidth * 2), position.y), Quaternion.identity, parent.Parent.transform); // Right 2
-                else if (child == 14)
-                    Instantiate(Tile, new Vector3(position.x + (tileWidth * 2), position.y - tileHeight), Quaternion.identity, parent.Parent.transform);  // Right 2 up 1
-                else if (child == 15)
-                    Instantiate(Tile, new Vector3(position.x - tileWidth, position.y + (tileHeight * 2)), Quaternion.identity, parent.Parent.transform); // Left 1 down 2
-                */
+                }
             }
 
             float sumX = 0;
@@ -846,18 +1177,33 @@ public class TBDGame : MonoBehaviour
 
         public void CreateChildrenFromShape(GameObject Tile, Vector3 position, float tileWidth, float tileHeight)
         {
-            if (ChosenShape >= Shapes.ShapesList.Count)
-                ChosenShape %= Shapes.ShapesList.Count;
+            if (Shape == null)
+            {
+                int runningFrequency = 0;
+                for (int i = 0; i < Shapes.ShapesList.Count; i++)
+                {
+                    runningFrequency += Shapes.ShapesList[i].Frequency;
+
+                    if (runningFrequency >= ChosenShape)
+                    {
+                        ChosenShape = i;
+                        break;
+                    }
+                }
+            }
 
             if (ShapeQuadrant == -1)
             {
                 if (GameMode == GameModes.Classic)
                     ShapeQuadrant = UnityEngine.Random.Range(0, Shapes.ShapesList[ChosenShape].Quadrants);
-                else if (GameMode == GameModes.Twist)
+                else if (GameMode == GameModes.Twist || GameMode == GameModes.Random)
                     ShapeQuadrant = 0;
             }
 
-            var quadrant = Shapes.ShapesList[ChosenShape].GetQuadrant(ShapeQuadrant);
+            if (Shape == null)
+                Shape = Shapes.ShapesList[ChosenShape];
+
+            var quadrant = Shape.GetQuadrant(ShapeQuadrant);
             for (int i = 0; i < quadrant.Count; i++)
             {
                 float positionX = 0;

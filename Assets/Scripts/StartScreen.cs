@@ -8,6 +8,7 @@ using UnityEngine.SceneManagement;
 public class StartScreen : MonoBehaviour
 {
     public GameObject InputName;
+    public GameObject UpdatedText;
     public void StartClassic()
     {
         if (!string.IsNullOrEmpty(TBDGame.Username) || InputName.GetComponent<TMPro.TMP_InputField>().text != TBDGame.Username)
@@ -54,6 +55,11 @@ public class StartScreen : MonoBehaviour
         SceneManager.LoadScene("Paypal");
     }
 
+    public void Settings()
+    {
+        SceneManager.LoadScene("Settings");
+    }
+
     public void HighScores()
     {
         if (!string.IsNullOrEmpty(TBDGame.Username) || InputName.GetComponent<TMPro.TMP_InputField>().text != TBDGame.Username)
@@ -68,10 +74,28 @@ public class StartScreen : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        if (!PlayerPrefs.HasKey("ShapesUpdate") || (System.DateTime.Now - System.Convert.ToDateTime(PlayerPrefs.GetString("ShapesUpdate"))).TotalHours >= 6)
+            StartCoroutine(GetRequest("http://api.angryelfgames.com/angryelf/ShapesList"));
+
         if (PlayerPrefs.HasKey("Username"))
         {
             InputName.GetComponent<TMPro.TMP_InputField>().text = PlayerPrefs.GetString("Username");
             TBDGame.Username = PlayerPrefs.GetString("Username");
+        }
+
+        if (PlayerPrefs.HasKey("SettingsMusic"))
+        {
+            TBDGame.MusicOn = PlayerPrefs.GetInt("SettingsMusic") == 1;
+        }
+
+        if (PlayerPrefs.HasKey("SettingsSoundFX"))
+        {
+            TBDGame.SoundFXOn = PlayerPrefs.GetInt("SettingsSoundFX") == 1;
+        }
+
+        if (PlayerPrefs.HasKey("SettingsVisualAid"))
+        {
+            TBDGame.VisualAidOn = PlayerPrefs.GetInt("SettingsVisualAid") == 1;
         }
 
         TBDGame.UserID = SystemInfo.deviceUniqueIdentifier;
@@ -79,6 +103,16 @@ public class StartScreen : MonoBehaviour
         SubmitTopScore(GameModes.Classic);
         SubmitTopScore(GameModes.Random);
         SubmitTopScore(GameModes.Twist);
+
+        var base64EncodedBytes = System.Convert.FromBase64String(PlayerPrefs.GetString("ShapesList"));
+        string json = System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
+        List<Shape> list = Newtonsoft.Json.JsonConvert.DeserializeObject<List<Shape>>(json);
+
+        if (list != null && list.Count > 0)
+        {
+            Shapes.ShapesList = list;
+            UpdatedText.GetComponent<TMPro.TextMeshProUGUI>().text = "Shapes loaded locally";
+        }
     }
 
     // Update is called once per frame
@@ -130,6 +164,31 @@ public class StartScreen : MonoBehaviour
 
             // Request and wait for the desired page.
             yield return webRequest.SendWebRequest();
+        }
+    }
+
+    IEnumerator GetRequest(string uri)
+    {
+        using (UnityWebRequest webRequest = UnityWebRequest.Get(uri))
+        {
+            // Request and wait for the desired page.
+            yield return webRequest.SendWebRequest();
+
+            if (webRequest.result == UnityWebRequest.Result.Success)
+            {
+                List<Shape> list = Newtonsoft.Json.JsonConvert.DeserializeObject<List<Shape>>(webRequest.downloadHandler.text);
+
+                if (list != null && list.Count > 0)
+                {
+                    var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(webRequest.downloadHandler.text);
+                    PlayerPrefs.SetString("ShapesList", System.Convert.ToBase64String(plainTextBytes));
+                    PlayerPrefs.SetString("ShapesUpdate", System.DateTime.Now.ToString());
+
+                    Shapes.ShapesList = list;
+
+                    UpdatedText.GetComponent<TMPro.TextMeshProUGUI>().text = "Shapes loaded from Server";
+                }
+            }
         }
     }
 }
